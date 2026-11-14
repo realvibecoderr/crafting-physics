@@ -1,0 +1,1541 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Einheiten-Labor</title>
+<style>
+/* =========================================================
+   DESIGN – Schwarz/Weiß, ruhig, im Stil von Notion
+   ========================================================= */
+:root{
+  --bg:#ffffff; --soft:#f7f7f5; --hover:rgba(55,53,47,.06); --line:rgba(55,53,47,.16);
+  --text:#37352f; --muted:rgba(55,53,47,.65); --faint:rgba(55,53,47,.42);
+  --strong:#191919; --inv:#ffffff;
+  --radius:8px;
+  --font:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --serif:ui-serif,Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#191919; --soft:#202020; --hover:rgba(255,255,255,.055); --line:rgba(255,255,255,.13);
+    --text:rgba(255,255,255,.87); --muted:rgba(255,255,255,.58); --faint:rgba(255,255,255,.38);
+    --strong:#ffffff; --inv:#191919;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{font:16px/1.55 var(--font);-webkit-text-size-adjust:100%;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.hidden{display:none!important}
+
+/* ---------- Kopfzeile ---------- */
+.top{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  display:grid;grid-template-columns:1fr auto;grid-template-areas:"brand tools" "tabs tabs";gap:6px 12px;
+  padding:10px 16px 8px;padding-top:max(10px,env(safe-area-inset-top))}
+@media (min-width:720px){.top{grid-template-columns:1fr auto 1fr;grid-template-areas:"brand tabs tools";align-items:center}}
+.brand{grid-area:brand;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.brand .logo{width:22px;height:22px;border-radius:5px;background:var(--strong);color:var(--inv);display:grid;place-items:center;font-size:.72rem;font-weight:800}
+.tools{grid-area:tools;display:flex;gap:2px;justify-content:flex-end}
+.tabs{grid-area:tabs;display:flex;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px}
+.tabs button{flex:1;padding:6px 14px;border-radius:6px;font-size:.9rem;color:var(--muted);white-space:nowrap}
+.tabs button.on{background:var(--bg);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 1px var(--line)}
+.ghost{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;color:var(--muted);font-size:.9rem}
+.ghost:hover{background:var(--hover);color:var(--text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:6px;border:1px solid var(--line);font-size:.92rem;background:var(--bg)}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--strong);color:var(--inv);border-color:var(--strong);font-weight:600}
+.btn.primary:hover{opacity:.88}
+.btn:disabled{opacity:.35;cursor:default}
+
+/* ---------- Spalte ---------- */
+.col{max-width:720px;margin:0 auto;padding:18px 16px calc(40px + env(safe-area-inset-bottom))}
+h1.page{font-size:1.9rem;line-height:1.2;margin:8px 0 4px;letter-spacing:-.02em}
+.lead{color:var(--muted);margin:0 0 20px}
+.label{font-size:.75rem;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+
+/* ---------- Aufgabenleiste ---------- */
+.taskbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.taskbar .goal{flex:1;min-width:200px}
+.taskbar .goal .t{font-size:1.2rem;font-weight:700;letter-spacing:-.01em}
+.taskbar .goal .s{font-size:.85rem;color:var(--muted)}
+.meter{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;background:var(--strong);transition:width .5s}
+
+/* ---------- Werkbank ---------- */
+.bench{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--bg)}
+.slots{display:grid;grid-template-columns:1fr 34px 1fr;align-items:center;gap:6px}
+.slot{min-height:86px;border:1.5px dashed var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:8px;background:var(--soft);transition:border-color .15s,background .15s;position:relative;cursor:pointer}
+.slot.filled{border-style:solid;border-color:var(--strong);background:var(--bg)}
+.slot.hover{border-color:var(--strong);background:var(--hover)}
+.slot .ph{color:var(--faint);font-size:.85rem}
+.slot .sym{font-size:1.5rem;font-weight:700;line-height:1.15}
+.slot .nm{font-size:.75rem;color:var(--muted)}
+.slot .clr{position:absolute;top:4px;right:6px;color:var(--faint);font-size:.95rem}
+.opmark{text-align:center;color:var(--faint);font-size:1.3rem}
+.ops{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}
+.op{height:44px;border:1px solid var(--line);border-radius:8px;font-weight:600;font-size:1.05rem;background:var(--bg)}
+.op:hover:not(:disabled){background:var(--hover)}
+.op.bin{background:var(--strong);color:var(--inv);border-color:var(--strong)}
+.op:disabled{opacity:.3;cursor:default}
+.op:not(:disabled):active{transform:scale(.96)}
+/* ---------- Freie Arbeitsfläche ---------- */
+.benchhead{display:flex;align-items:center;justify-content:space-between;margin:-4px 0 8px}
+.board{position:relative;height:clamp(260px,46vh,440px);border:1px solid var(--line);border-radius:10px;overflow:hidden;
+  background-color:var(--soft);background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:18px 18px}
+.board.over{border-color:var(--strong)}
+.boardhint{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--faint);font-size:.9rem;padding:24px;pointer-events:none}
+.chip.piece{position:absolute;white-space:nowrap;touch-action:none;cursor:grab;z-index:1}
+.chip.piece.moving{z-index:30;pointer-events:none;box-shadow:0 10px 26px rgba(0,0,0,.22);cursor:grabbing;transition:none}
+.chip.piece.target{box-shadow:0 0 0 2px var(--strong);transform:scale(1.07)}
+.pop{position:fixed;z-index:60;background:var(--bg);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.18);
+  padding:8px;display:none;max-width:calc(100vw - 16px)}
+.pop.open{display:block}
+.pop .pt{font-size:.8rem;color:var(--muted);padding:2px 4px 8px;max-width:300px}
+.pop .pb{display:flex;flex-wrap:wrap;gap:5px}
+.pop button{padding:8px 11px;border-radius:6px;border:1px solid var(--line);font-weight:600;font-size:.92rem}
+.pop button:hover{background:var(--hover)}
+.pop button.pri{background:var(--strong);color:var(--inv);border-color:var(--strong)}
+.pop button.quiet{font-weight:400;color:var(--muted)}
+#timer{font-variant-numeric:tabular-nums}
+.result{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;display:flex;gap:14px;align-items:center;min-height:64px}
+.result .rtext{flex:1;font-size:.92rem;color:var(--muted)}
+.result .rtext b{color:var(--text)}
+.result .rtext .eq{font-size:1rem;color:var(--text);font-weight:600;margin-bottom:2px}
+.result.win{animation:win .6s ease}
+@keyframes win{0%{box-shadow:none}40%{box-shadow:0 0 0 3px var(--strong)}100%{box-shadow:none}}
+
+/* ---------- Bausteine (Bruch-Darstellung) ---------- */
+.bricks{display:inline-flex;flex-direction:column;align-items:center;gap:4px;flex:none}
+.brow{display:flex;gap:3px;flex-wrap:wrap;justify-content:center;max-width:220px}
+.bbar{height:1.5px;background:var(--text);align-self:stretch;min-width:34px}
+.brick{border:1.5px solid var(--text);border-radius:5px;padding:0 6px;font-size:.78rem;font-weight:600;min-width:26px;text-align:center;line-height:1.6;background:var(--bg)}
+.brick.x{opacity:.35;text-decoration:line-through}
+.brick.one{border-style:dashed}
+.bricks.lg .brick{font-size:.95rem;padding:2px 9px}
+
+/* ---------- Bausteinkasten (Kacheln) ---------- */
+.drawer{margin-top:18px}
+.drawer section + section{margin-top:16px}
+.drawer h3{margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{position:relative;display:inline-flex;align-items:baseline;gap:7px;padding:7px 11px;border:1px solid var(--line);border-radius:7px;background:var(--bg);
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-y;transition:background .12s,transform .12s,box-shadow .12s;cursor:grab}
+.chip:hover{background:var(--hover)}
+.chip .sym{font-weight:650}
+.chip .nm{font-size:.76rem;color:var(--muted)}
+.chip.k-base{border-color:var(--strong)}
+.chip.k-named{background:var(--soft)}
+.chip.k-inter{border-style:dashed}
+.chip.k-dimless{border-style:dotted;border-width:2px}
+.chip.sel{box-shadow:0 0 0 2px var(--strong)}
+.chip.armed{transform:scale(1.06);box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.chip.dragging{opacity:.3}
+.chip .del{margin-left:2px;color:var(--faint);font-size:.9rem;line-height:1;padding:0 2px}
+.chip.pop{animation:pop .5s cubic-bezier(.2,1.5,.4,1)}
+.chip.flash{animation:flash 1s ease}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:none;opacity:1}}
+@keyframes flash{0%,100%{box-shadow:none}30%{box-shadow:0 0 0 3px var(--strong)}}
+.dragghost{position:fixed;left:0;top:0;pointer-events:none;z-index:100;box-shadow:0 10px 28px rgba(0,0,0,.25);cursor:grabbing}
+.empty{color:var(--faint);font-size:.88rem}
+.helpline{font-size:.8rem;color:var(--faint);margin-top:10px}
+
+/* ---------- Listen (Abenteuer / Lernen) ---------- */
+.list{border-top:1px solid var(--line)}
+.row{display:flex;align-items:center;gap:12px;padding:11px 6px;border-bottom:1px solid var(--line);width:100%;text-align:left;border-radius:0}
+.row:hover:not(:disabled){background:var(--hover)}
+.row:disabled{opacity:.4;cursor:default}
+.row .num{width:28px;height:28px;border-radius:6px;border:1px solid var(--line);display:grid;place-items:center;font-size:.8rem;font-weight:600;flex:none}
+.row.done .num{background:var(--strong);color:var(--inv);border-color:var(--strong)}
+.row .main{flex:1;min-width:0}
+.row .main .t{font-weight:600}
+.row .main .s{font-size:.82rem;color:var(--muted)}
+.stars{letter-spacing:2px;font-size:.95rem;white-space:nowrap}
+.chapter{margin:26px 0 6px}
+
+/* ---------- Lektion lesen ---------- */
+.lesson{font-size:1.05rem}
+.lesson p{margin:0 0 14px}
+.lesson .demo{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:18px;background:var(--soft);border-radius:10px;margin:6px 0 16px}
+.lesson .demo .opbig{font-size:1.4rem;color:var(--muted)}
+.lesson table{border-collapse:collapse;width:100%;margin:4px 0 16px;font-size:.95rem}
+.lesson td,.lesson th{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left}
+.lesson th{font-size:.75rem;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.callout{display:flex;gap:10px;background:var(--soft);border-radius:8px;padding:12px 14px;margin:0 0 14px;font-size:.95rem}
+.dots{display:flex;gap:6px;justify-content:center;margin:18px 0}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--strong)}
+.navrow{display:flex;justify-content:space-between;gap:10px}
+
+/* ---------- Modals ---------- */
+.overlay{position:fixed;inset:0;background:rgba(15,15,15,.45);display:flex;align-items:flex-end;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:auto}
+.sheet{background:var(--bg);width:100%;max-width:620px;max-height:90vh;overflow:auto;border-radius:14px 14px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+  transform:translateY(24px);transition:transform .22s;box-shadow:0 -1px 0 var(--line)}
+.overlay.open .sheet{transform:none}
+@media (min-width:700px){.overlay{align-items:center}.sheet{border-radius:14px;padding:26px}}
+.sheet-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.sheet-head h2{margin:0;font-size:1.2rem;flex:1}
+.card{padding:4px 0 6px}
+.card + .card{border-top:1px solid var(--line);padding-top:16px;margin-top:10px}
+.card .head{display:flex;gap:16px;align-items:center}
+.card .big{font-size:2.4rem;font-weight:800;line-height:1;letter-spacing:-.02em}
+.card .title{font-weight:700;font-size:1.1rem}
+.card .sub{color:var(--muted);font-size:.88rem}
+.card h4{margin:16px 0 6px}
+.steps{list-style:none;margin:0;padding:0}
+.steps li{padding:5px 10px;background:var(--soft);border-radius:6px;margin-bottom:3px;font-variant-numeric:tabular-nums}
+.steps li.words{background:none;padding-left:0;font-weight:600}
+.steps .eq{color:var(--faint);margin-right:6px}
+.formula{font-family:var(--serif);font-style:italic;font-size:1.1rem}
+.badge{display:inline-block;font-size:.72rem;font-weight:600;padding:1px 7px;border-radius:4px;border:1px solid var(--line);color:var(--muted)}
+.celebrate{text-align:center;margin-bottom:14px}
+.celebrate .bigstars{font-size:2.2rem;letter-spacing:6px}
+.celebrate h2{margin:4px 0 2px;font-size:1.4rem}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.btnrow .btn{flex:1}
+.bookgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
+.bentry{border:1px solid var(--line);border-radius:7px;padding:8px 10px;text-align:left;min-height:56px}
+.bentry:hover{background:var(--hover)}
+.bentry .s{font-weight:700}
+.bentry .n{font-size:.75rem;color:var(--muted)}
+.bentry.unknown{background:repeating-linear-gradient(135deg,var(--soft) 0 6px,transparent 6px 12px);cursor:default}
+.bentry.unknown .s{color:var(--faint);letter-spacing:.15em}
+.locked{opacity:.5}
+.foot{margin-top:18px;font-size:.78rem;color:var(--faint)}
+
+/* Toast & Funken */
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,16px);background:var(--strong);color:var(--inv);
+  padding:9px 16px;border-radius:8px;font-size:.9rem;opacity:0;transition:.22s;z-index:120;max-width:calc(100% - 32px);text-align:center;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.burst{position:fixed;width:0;height:0;z-index:110;pointer-events:none}
+.burst i{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--strong);animation:fly .8s ease-out forwards}
+.burst i:nth-child(2n){background:transparent;border:1.5px solid var(--strong)}
+@keyframes fly{0%{transform:translate(0,0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.4);opacity:0}}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">SI</span>Einheiten-Labor</div>
+  <nav class="tabs" id="tabs">
+    <button data-mode="learn">Lernen</button>
+    <button data-mode="adventure">Abenteuer</button>
+    <button data-mode="labor">Labor</button>
+  </nav>
+  <div class="tools">
+    <button class="ghost" id="btnSound" title="Ton an/aus"></button>
+    <button class="ghost" id="btnReset" title="Alles zurücksetzen"><svg class="i" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+  </div>
+</header>
+
+<main class="col">
+  <section id="panel"></section>
+  <section id="taskbar" class="taskbar"></section>
+  <section id="bench" class="bench">
+    <div class="benchhead"><span class="label">Arbeitsfläche</span><button class="ghost" data-act="clear">Leeren</button></div>
+    <div id="board" class="board">
+      <div id="boardHint" class="boardhint">Ziehe Bausteine hierher – an jede beliebige Stelle.<br>
+        Lege einen Baustein auf einen anderen, um sie zu verrechnen.<br>Antippen öffnet x², x³ und 1/x.</div>
+    </div>
+    <div class="result" id="result"></div>
+  </section>
+  <section id="drawer" class="drawer"></section>
+</main>
+<div class="pop" id="pop" role="menu"></div>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* =========================================================================
+   1) DATEN  –  Katalog, Abenteuer-Level, Lektionen (alles leicht erweiterbar)
+   -------------------------------------------------------------------------
+   Exponentenvektor-Reihenfolge: [m, kg, s, A, K, mol, cd]
+   Referenzen in Rezepten/Lösungen: ID einer Basis-/Katalogeinheit, 'sr'
+   (dimensionslos), ein roher Vektor oder '#n' (= Ergebnis von Schritt n).
+   ========================================================================= */
+const BASE_UNITS = [
+  { id:'m',   symbol:'m',   name:'Meter',     qty:'Länge',       vec:[1,0,0,0,0,0,0] },
+  { id:'kg',  symbol:'kg',  name:'Kilogramm', qty:'Masse',       vec:[0,1,0,0,0,0,0] },
+  { id:'s',   symbol:'s',   name:'Sekunde',   qty:'Zeit',        vec:[0,0,1,0,0,0,0] },
+  { id:'A',   symbol:'A',   name:'Ampere',    qty:'Stromstärke', vec:[0,0,0,1,0,0,0] },
+  { id:'K',   symbol:'K',   name:'Kelvin',    qty:'Temperatur',  vec:[0,0,0,0,1,0,0] },
+  { id:'mol', symbol:'mol', name:'Mol',       qty:'Stoffmenge',  vec:[0,0,0,0,0,1,0] },
+  { id:'cd',  symbol:'cd',  name:'Candela',   qty:'Lichtstärke', vec:[0,0,0,0,0,0,1] },
+];
+
+/* Stufen im freien Labor */
+const STAGES = [
+  { level:1, title:'Stufe 1 · Grundlagen',          unlockNeed:0 },
+  { level:2, title:'Stufe 2 · Mechanik & Strom',    unlockNeed:6 },
+  { level:3, title:'Stufe 3 · Feld, Licht & Wärme', unlockNeed:6 },
+];
+
+const CATALOG = [
+  // ---------------- Stufe 1 ----------------
+  { id:'flaeche', level:1, qty:'Fläche', name:'Quadratmeter', symbol:'m²', vec:[2,0,0,0,0,0,0],
+    formula:'A = l · b', recipe:{a:'m', op:'²'},
+    info:'Eine Fläche entsteht, wenn man eine Länge mit einer zweiten Länge multipliziert.',
+    example:'Ein DIN-A4-Blatt hat etwa 0,06 m².' },
+  { id:'volumen', level:1, qty:'Volumen', name:'Kubikmeter', symbol:'m³', vec:[3,0,0,0,0,0,0],
+    formula:'V = A · h', recipe:{a:'flaeche', op:'×', b:'m'},
+    info:'Volumen ist Fläche mal Höhe – also dreimal eine Länge.',
+    example:'Ein Liter sind 0,001 m³.' },
+  { id:'geschw', level:1, qty:'Geschwindigkeit', name:'Meter pro Sekunde', symbol:'m/s', vec:[1,0,-1,0,0,0,0],
+    formula:'v = s / t', recipe:{a:'m', op:'÷', b:'s'},
+    info:'Geschwindigkeit sagt, wie viel Weg pro Zeit zurückgelegt wird.',
+    example:'50 km/h sind ungefähr 14 m/s.' },
+  { id:'beschl', level:1, qty:'Beschleunigung', name:'Meter pro Sekundenquadrat', symbol:'m/s²', vec:[1,0,-2,0,0,0,0],
+    formula:'a = v / t', recipe:{a:'geschw', op:'÷', b:'s'},
+    info:'Beschleunigung sagt, wie stark sich die Geschwindigkeit jede Sekunde ändert.',
+    example:'Im freien Fall: etwa 9,81 m/s².' },
+  { id:'frequenz', level:1, qty:'Frequenz', name:'Hertz', symbol:'Hz', vec:[0,0,-1,0,0,0,0],
+    formula:'f = 1 / T', recipe:{a:'s', op:'1/x'},
+    info:'Frequenz zählt, wie oft etwas pro Sekunde passiert.',
+    example:'Der Kammerton A schwingt 440-mal pro Sekunde: 440 Hz.' },
+  { id:'dichte', level:1, qty:'Dichte', name:'Kilogramm pro Kubikmeter', symbol:'kg/m³', vec:[-3,1,0,0,0,0,0],
+    formula:'ρ = m / V', recipe:{a:'kg', op:'÷', b:'volumen'},
+    info:'Dichte gibt an, wie viel Masse in einem bestimmten Volumen steckt.',
+    example:'Wasser: 1000 kg/m³, Luft: etwa 1,2 kg/m³.' },
+  { id:'impuls', level:1, qty:'Impuls', name:'Kilogrammmeter pro Sekunde', symbol:'kg·m/s', vec:[1,1,-1,0,0,0,0],
+    formula:'p = m · v', recipe:{a:'kg', op:'×', b:'geschw'},
+    info:'Der Impuls ist der „Schwung“ eines Körpers: Masse mal Geschwindigkeit.',
+    example:'Ein LKW hat bei gleichem Tempo viel mehr Impuls als ein Fahrrad.' },
+  { id:'kraft', level:1, qty:'Kraft', name:'Newton', symbol:'N', vec:[1,1,-2,0,0,0,0],
+    formula:'F = m · a', recipe:{a:'kg', op:'×', b:'beschl'},
+    info:'Kraft ist Masse mal Beschleunigung. Sie bringt Dinge in Bewegung oder verformt sie.',
+    example:'Eine 100-g-Tafel Schokolade drückt mit etwa 1 N auf deine Hand.' },
+  { id:'ladung', level:1, qty:'Elektrische Ladung', name:'Coulomb', symbol:'C', vec:[0,0,1,1,0,0,0],
+    formula:'Q = I · t', recipe:{a:'A', op:'×', b:'s'},
+    info:'Ladung ist Stromstärke mal Zeit – also wie viel Elektrizität geflossen ist.',
+    example:'Ein Handy-Akku speichert rund 10 000 C.' },
+  { id:'molmasse', level:1, qty:'Molare Masse', name:'Kilogramm pro Mol', symbol:'kg/mol', vec:[0,1,0,0,0,-1,0],
+    formula:'M = m / n', recipe:{a:'kg', op:'÷', b:'mol'},
+    info:'Die molare Masse ist die Masse von einem Mol eines Stoffes.',
+    example:'Wasser: 0,018 kg/mol (also 18 g pro Mol).' },
+  { id:'konz', level:1, qty:'Stoffmengenkonzentration', name:'Mol pro Kubikmeter', symbol:'mol/m³', vec:[-3,0,0,0,0,1,0],
+    formula:'c = n / V', recipe:{a:'mol', op:'÷', b:'volumen'},
+    info:'Die Konzentration sagt, wie viel Stoffmenge in einem Volumen gelöst ist.',
+    example:'Meerwasser enthält etwa 600 mol/m³ Kochsalz (0,6 mol/L).' },
+
+  // ---------------- Stufe 2 ----------------
+  { id:'druck', level:2, qty:'Druck', name:'Pascal', symbol:'Pa', vec:[-1,1,-2,0,0,0,0],
+    formula:'p = F / A', recipe:{a:'kraft', op:'÷', b:'flaeche'},
+    info:'Druck ist Kraft pro Fläche. Kleine Fläche, gleiche Kraft → großer Druck.',
+    example:'Luftdruck auf Meereshöhe: etwa 100 000 Pa = 1 bar.' },
+  { id:'energie', level:2, qty:'Energie / Arbeit', name:'Joule', symbol:'J', vec:[2,1,-2,0,0,0,0],
+    formula:'W = F · s', recipe:{a:'kraft', op:'×', b:'m'},
+    info:'Arbeit ist Kraft mal Weg. Dabei wird Energie übertragen.',
+    example:'Einen Apfel (≈ 1 N) einen Meter hochheben kostet etwa 1 J.' },
+  { id:'drehmoment', level:2, qty:'Drehmoment', name:'Newtonmeter', symbol:'N·m', vec:[2,1,-2,0,0,0,0],
+    formula:'M = F · r', recipe:{a:'kraft', op:'×', b:'m'},
+    info:'Drehmoment ist Kraft mal Hebelarm – es bringt etwas zum Drehen.',
+    example:'Radmuttern am Auto zieht man mit etwa 110 N·m an.',
+    note:'Gleiche Dimension wie Energie (J)! Man schreibt trotzdem N·m, weil Kraft und Hebelarm senkrecht aufeinander stehen – es wird keine Arbeit verrichtet.' },
+  { id:'leistung', level:2, qty:'Leistung', name:'Watt', symbol:'W', vec:[2,1,-3,0,0,0,0],
+    formula:'P = E / t', recipe:{a:'energie', op:'÷', b:'s'},
+    info:'Leistung ist Energie pro Zeit: Wie schnell Energie umgesetzt wird.',
+    example:'Eine LED-Lampe braucht etwa 8 W, ein Wasserkocher 2000 W.' },
+  { id:'spannung', level:2, qty:'Elektrische Spannung', name:'Volt', symbol:'V', vec:[2,1,-3,-1,0,0,0],
+    formula:'U = P / I', recipe:{a:'leistung', op:'÷', b:'A'},
+    info:'Spannung ist Leistung pro Stromstärke – der „Antrieb“ für den elektrischen Strom.',
+    example:'Eine Steckdose liefert 230 V, eine AA-Batterie 1,5 V.' },
+  { id:'widerstand', level:2, qty:'Elektrischer Widerstand', name:'Ohm', symbol:'Ω', vec:[2,1,-3,-2,0,0,0],
+    formula:'R = U / I', recipe:{a:'spannung', op:'÷', b:'A'},
+    info:'Der Widerstand gibt an, wie stark ein Bauteil den Strom bremst.',
+    example:'Ein Wasserkocher hat etwa 25 Ω.' },
+  { id:'leitwert', level:2, qty:'Elektrischer Leitwert', name:'Siemens', symbol:'S', vec:[-2,-1,3,2,0,0,0],
+    formula:'G = 1 / R', recipe:{a:'widerstand', op:'1/x'},
+    info:'Der Leitwert ist der Kehrwert des Widerstands: Wie gut ein Bauteil Strom leitet.',
+    example:'25 Ω entsprechen einem Leitwert von 0,04 S.' },
+  { id:'feldstaerke', level:2, qty:'Elektrische Feldstärke', name:'Volt pro Meter', symbol:'V/m', vec:[1,1,-3,-1,0,0,0],
+    formula:'E = U / d', recipe:{a:'spannung', op:'÷', b:'m'},
+    info:'Die Feldstärke ist Spannung pro Abstand. Sie zeigt, wie stark ein elektrisches Feld ist.',
+    example:'Unter einer Gewitterwolke: über 10 000 V/m.' },
+  { id:'stromdichte', level:2, qty:'Stromdichte', name:'Ampere pro Quadratmeter', symbol:'A/m²', vec:[-2,0,0,1,0,0,0],
+    formula:'J = I / A', recipe:{a:'A', op:'÷', b:'flaeche'},
+    info:'Die Stromdichte sagt, wie viel Strom durch eine Querschnittsfläche fließt.',
+    example:'In Hausleitungen: einige Millionen A/m² (wenige A pro mm²).' },
+  { id:'katal', level:2, qty:'Katalytische Aktivität', name:'Katal', symbol:'kat', vec:[0,0,-1,0,0,1,0],
+    formula:'z = n / t', recipe:{a:'mol', op:'÷', b:'s'},
+    info:'Katal misst, wie viel Stoffmenge pro Sekunde umgesetzt wird – wichtig für Enzyme.',
+    example:'Enzymaktivitäten im Blut liegen meist bei Nano- bis Mikrokatal.' },
+  { id:'leuchtdichte', level:2, qty:'Leuchtdichte', name:'Candela pro Quadratmeter', symbol:'cd/m²', vec:[-2,0,0,0,0,0,1],
+    formula:'L = I / A', recipe:{a:'cd', op:'÷', b:'flaeche'},
+    info:'Die Leuchtdichte beschreibt, wie hell eine leuchtende Fläche für unser Auge wirkt.',
+    example:'Ein Handy-Display: etwa 500 cd/m².',
+    note:'Gleiche Dimension wie die Beleuchtungsstärke (Lux) aus Stufe 3 – dort steckt aber ein unsichtbarer Raumwinkel drin.' },
+  { id:'dynvisk', level:2, qty:'Dynamische Viskosität', name:'Pascalsekunde', symbol:'Pa·s', vec:[-1,1,-1,0,0,0,0],
+    formula:'η = τ · t', recipe:{a:'druck', op:'×', b:'s'},
+    info:'Die Viskosität gibt an, wie zäh eine Flüssigkeit ist.',
+    example:'Wasser: 0,001 Pa·s, Honig: etwa 10 Pa·s.' },
+  { id:'kinvisk', level:2, qty:'Kinematische Viskosität', name:'Quadratmeter pro Sekunde', symbol:'m²/s', vec:[2,0,-1,0,0,0,0],
+    formula:'ν = η / ρ', recipe:{a:'flaeche', op:'÷', b:'s'},
+    info:'Zähigkeit bezogen auf die Dichte – wichtig für Strömungen.',
+    example:'Wasser: etwa 0,000001 m²/s.' },
+
+  // ---------------- Stufe 3 ----------------
+  { id:'kapazitaet', level:3, qty:'Kapazität', name:'Farad', symbol:'F', vec:[-2,-1,4,2,0,0,0],
+    formula:'C = Q / U', recipe:{a:'ladung', op:'÷', b:'spannung'},
+    info:'Die Kapazität sagt, wie viel Ladung ein Kondensator pro Volt speichern kann.',
+    example:'Typische Kondensatoren haben Mikrofarad (µF).' },
+  { id:'weber', level:3, qty:'Magnetischer Fluss', name:'Weber', symbol:'Wb', vec:[2,1,-2,-1,0,0,0],
+    formula:'Φ = U · t', recipe:{a:'spannung', op:'×', b:'s'},
+    info:'Der magnetische Fluss beschreibt, wie viel Magnetfeld durch eine Fläche tritt.',
+    example:'Ändert sich der Fluss um 1 Wb pro Sekunde, entsteht 1 V Spannung.' },
+  { id:'tesla', level:3, qty:'Magnetische Flussdichte', name:'Tesla', symbol:'T', vec:[0,1,-2,-1,0,0,0],
+    formula:'B = Φ / A', recipe:{a:'weber', op:'÷', b:'flaeche'},
+    info:'Die Flussdichte ist magnetischer Fluss pro Fläche – die „Stärke“ eines Magnetfelds.',
+    example:'Erdmagnetfeld: etwa 0,00005 T, MRT-Gerät: 3 T.' },
+  { id:'induktivitaet', level:3, qty:'Induktivität', name:'Henry', symbol:'H', vec:[2,1,-2,-2,0,0,0],
+    formula:'L = Φ / I', recipe:{a:'weber', op:'÷', b:'A'},
+    info:'Die Induktivität ist magnetischer Fluss pro Stromstärke – typisch für Spulen.',
+    example:'Spulen in Netzteilen haben einige Millihenry.' },
+  { id:'lumen', level:3, qty:'Lichtstrom', name:'Lumen', symbol:'lm', vec:[0,0,0,0,0,0,1], viaDimless:true,
+    formula:'Φ = I · Ω', recipe:{a:'cd', op:'×', b:'sr'},
+    info:'Lichtstrom ist Lichtstärke mal Raumwinkel: die gesamte Lichtmenge, die eine Lampe abgibt.',
+    example:'Eine helle LED-Lampe: etwa 800 lm.',
+    note:'Der Raumwinkel (sr = m²/m²) ist dimensionslos. Darum hat Lumen dieselbe Dimension wie Candela.' },
+  { id:'lux', level:3, qty:'Beleuchtungsstärke', name:'Lux', symbol:'lx', vec:[-2,0,0,0,0,0,1],
+    formula:'E = Φ / A', recipe:{a:'lumen', op:'÷', b:'flaeche'},
+    info:'Lux ist Lichtstrom pro Fläche: Wie hell es auf einer Fläche ist.',
+    example:'Schreibtisch: 500 lx, sonniger Tag: 100 000 lx.',
+    note:'Gleiche Dimension wie die Leuchtdichte (cd/m²), weil der Raumwinkel dimensionslos ist.' },
+  { id:'waermekap', level:3, qty:'Wärmekapazität', name:'Joule pro Kelvin', symbol:'J/K', vec:[2,1,-2,0,-1,0,0],
+    formula:'C = Q / ΔT', recipe:{a:'energie', op:'÷', b:'K'},
+    info:'Die Wärmekapazität ist die Energie, die man braucht, um einen Körper um 1 K zu erwärmen.',
+    example:'Ein Liter Wasser: etwa 4200 J/K.' },
+  { id:'entropie', level:3, qty:'Entropie', name:'Joule pro Kelvin', symbol:'J/K', vec:[2,1,-2,0,-1,0,0],
+    formula:'ΔS = Q / T', recipe:{a:'energie', op:'÷', b:'K'},
+    info:'Die Entropie ist ein Maß dafür, wie stark sich Energie verteilt („Unordnung“).',
+    example:'Wenn Eis schmilzt, steigt seine Entropie.',
+    note:'Gleiche Einheit wie die Wärmekapazität – aber eine ganz andere physikalische Bedeutung.' },
+  { id:'spezwaerme', level:3, qty:'Spezifische Wärmekapazität', name:'Joule pro Kilogramm und Kelvin', symbol:'J/(kg·K)', vec:[2,0,-2,0,-1,0,0],
+    formula:'c = Q / (m · ΔT)', recipe:{a:'waermekap', op:'÷', b:'kg'},
+    info:'Energie, die man braucht, um 1 kg eines Stoffes um 1 K zu erwärmen.',
+    example:'Wasser: 4190 J/(kg·K) – darum bleibt das Meer lange warm.' },
+  { id:'waermeleit', level:3, qty:'Wärmeleitfähigkeit', name:'Watt pro Meter und Kelvin', symbol:'W/(m·K)', vec:[1,1,-3,0,-1,0,0],
+    formula:'λ = P · d / (A · ΔT)', recipe:{a:'leistung', op:'÷', b:[1,0,0,0,1,0,0]},
+    info:'Die Wärmeleitfähigkeit sagt, wie gut ein Stoff Wärme weiterleitet.',
+    example:'Kupfer: etwa 400 W/(m·K), Styropor: 0,035 W/(m·K).' },
+];
+
+/* -------------------------------------------------------------------------
+   ABENTEUER: Jedes Level = eine Zieleinheit + erlaubte Startbausteine.
+   par = Schritte der Musterlösung (3 Sterne), maxMoves = optionales Limit.
+   solution wird im Selbsttest nachgerechnet und dient als Tipp.
+   ------------------------------------------------------------------------- */
+const ADVENTURE = [
+  { chapter:'Raum & Zeit', levels:[
+    { target:'flaeche',  given:['m'],          solution:[['m','²']] },
+    { target:'geschw',   given:['m','s'],      solution:[['m','÷','s']] },
+    { target:'frequenz', given:['s'],          solution:[['s','1/x']] },
+    { target:'volumen',  given:['m'],          solution:[['m','³']] },
+    { target:'beschl',   given:['m','s'],      solution:[['s','²'],['m','÷','#0']] },
+  ]},
+  { chapter:'Masse & Kraft', levels:[
+    { target:'dichte',   given:['m','kg'],     solution:[['m','³'],['kg','÷','#0']] },
+    { target:'impuls',   given:['m','kg','s'], solution:[['m','÷','s'],['kg','×','#0']] },
+    { target:'kraft',    given:['kg','beschl'],solution:[['kg','×','beschl']] },
+    { target:'kraft',    given:['m','kg','s'], solution:[['kg','×','m'],['s','²'],['#0','÷','#1']] },
+    { target:'druck',    given:['kraft','m'],  solution:[['m','²'],['kraft','÷','#0']] },
+  ]},
+  { chapter:'Energie & Leistung', levels:[
+    { target:'energie',  given:['kraft','m'],  solution:[['kraft','×','m']] },
+    { target:'leistung', given:['energie','s'],solution:[['energie','÷','s']] },
+    { target:'energie',  given:['m','kg','s'], solution:[['m','÷','s'],['#0','²'],['kg','×','#1']] },
+    { target:'leistung', given:['m','kg','s'], solution:[['m','÷','s'],['#0','³'],['#1','÷','m'],['kg','×','#2']] },
+  ]},
+  { chapter:'Elektrizität', levels:[
+    { target:'ladung',     given:['A','s'],             solution:[['A','×','s']] },
+    { target:'spannung',   given:['leistung','A'],      solution:[['leistung','÷','A']] },
+    { target:'widerstand', given:['spannung','A'],      solution:[['spannung','÷','A']] },
+    { target:'leitwert',   given:['leistung','A'],      solution:[['A','²'],['#0','÷','leistung']] },
+    { target:'kapazitaet', given:['A','s','spannung'],  solution:[['A','×','s'],['#0','÷','spannung']] },
+    { target:'spannung',   given:['m','kg','s','A'],    maxMoves:8,
+      solution:[['m','÷','s'],['#0','³'],['#1','÷','m'],['kg','×','#2'],['#3','÷','A']] },
+  ]},
+  { chapter:'Magnetismus, Wärme & Licht', levels:[
+    { target:'weber',         given:['spannung','s'],        solution:[['spannung','×','s']] },
+    { target:'tesla',         given:['spannung','s','m'],    solution:[['spannung','×','s'],['m','²'],['#0','÷','#1']] },
+    { target:'induktivitaet', given:['spannung','A','s'],    solution:[['spannung','×','s'],['#0','÷','A']] },
+    { target:'spezwaerme',    given:['energie','kg','K'],    solution:[['energie','÷','kg'],['#0','÷','K']] },
+    { target:'waermeleit',    given:['leistung','m','K'],    solution:[['leistung','÷','m'],['#0','÷','K']] },
+    { target:'lumen',         given:['cd','m'],              solution:[['m','÷','m'],['cd','×','#0']] },
+  ]},
+  { chapter:'Meisterprüfung – nur Basiseinheiten', levels:[
+    { target:'tesla',         given:['m','kg','s','A'], maxMoves:6, solution:[['kg','÷','A'],['s','²'],['#0','÷','#1']] },
+    { target:'induktivitaet', given:['m','kg','s','A'], maxMoves:7, solution:[['m','÷','s'],['#0','÷','A'],['#1','²'],['kg','×','#2']] },
+    { target:'kapazitaet',    given:['m','kg','s','A'], maxMoves:9,
+      solution:[['s','²'],['A','×','#0'],['#1','²'],['m','²'],['kg','×','#3'],['#2','÷','#4']] },
+  ]},
+];
+
+/* -------------------------------------------------------------------------
+   LERNMODUS: Lektionen für Einsteiger. pages = Funktionen, die HTML liefern
+   (B = Bausteine zeichnen). task optional: kleine Übung auf der Werkbank.
+   ------------------------------------------------------------------------- */
+const LESSONS = [
+  { title:'Zahl und Einheit', sub:'Was eine Einheit überhaupt ist',
+    pages:[
+      B => `<p>Jede Messung besteht aus zwei Teilen: einer <b>Zahl</b> und einer <b>Einheit</b>.</p>
+        <div class="demo"><span style="font-size:2.2rem;font-weight:700">2 <u>m</u></span></div>
+        <p>„2 Meter“: Die Zahl sagt, <i>wie viel</i>. Die Einheit sagt, <i>wovon</i> – hier: Länge.</p>`,
+      B => `<p>Die ganze Physik kommt mit nur <b>7 Grundbausteinen</b> aus. Man nennt sie <b>SI-Basiseinheiten</b>:</p>
+        <table><tr><th>Zeichen</th><th>Name</th><th>misst …</th></tr>
+        ${BASE_UNITS.map(b => `<tr><td><b>${b.symbol}</b></td><td>${b.name}</td><td>${b.qty}</td></tr>`).join('')}</table>`,
+      B => `<p>Alle anderen Einheiten – Newton, Watt, Volt … – sind aus diesen 7 Bausteinen <b>zusammengesetzt</b>, so wie Lego-Figuren aus Steinen.</p>
+        <div class="demo">${B([1,1,-2,0,0,0,0],true)}<span class="opbig">=</span><span style="font-size:2rem;font-weight:800">N</span></div>
+        <p>Du brauchst dafür nur zwei Bauregeln: <b>Malnehmen</b> und <b>Teilen</b>. Los geht's!</p>`,
+    ]},
+  { title:'Malnehmen', sub:'Bausteine zusammenlegen',
+    pages:[
+      B => `<p>Ein Zimmer ist 4 m lang und 3 m breit. Seine Fläche ist</p>
+        <div class="demo"><b>4 m × 3 m = 12 m·m</b></div>
+        <p>Beim Malnehmen werden die Bausteine einfach <b>nebeneinandergelegt</b>:</p>
+        <div class="demo">${B([1,0,0,0,0,0,0],true)}<span class="opbig">×</span>${B([1,0,0,0,0,0,0],true)}<span class="opbig">=</span>${B([2,0,0,0,0,0,0],true)}</div>`,
+      B => `<p>Statt „m·m“ schreibt man kurz <b>m²</b> (sprich: Quadratmeter).</p>
+        <div class="callout"><span>💬</span><span>Die kleine 2 zählt nur, <b>wie oft</b> ein Baustein vorkommt.</span></div>
+        <p>Probier es gleich selbst auf der Werkbank!</p>`,
+    ],
+    task:{ target:'flaeche', given:['m'], solution:[['m','×','m']],
+      howto:'Hol dir unten ein zweites <b>m</b>, zieh es auf das erste und wähle <b>×</b>.',
+      outro:'Genau: m × m = m². Zwei Längen malgenommen ergeben eine Fläche.' }},
+  { title:'Teilen', sub:'Bausteine wandern nach unten',
+    pages:[
+      B => `<p>Ein Radfahrer fährt 100 m in 20 s. Seine Geschwindigkeit ist</p>
+        <div class="demo"><b>100 m ÷ 20 s = 5 m/s</b></div>
+        <p>Beim Teilen wandert der zweite Baustein <b>unter den Bruchstrich</b>:</p>
+        <div class="demo">${B([1,0,0,0,0,0,0],true)}<span class="opbig">÷</span>${B([0,0,1,0,0,0,0],true)}<span class="opbig">=</span>${B([1,0,-1,0,0,0,0],true)}</div>`,
+      B => `<p>Man liest m/s als „Meter <b>pro</b> Sekunde“.</p>
+        <div class="callout"><span>💬</span><span>„pro“ bedeutet immer: <b>geteilt durch</b>. Die Reihenfolge ist wichtig: m ÷ s ist etwas anderes als s ÷ m.</span></div>`,
+    ],
+    task:{ target:'geschw', given:['m','s'], solution:[['m','÷','s']],
+      howto:'Zieh <b>m</b> auf <b>s</b> und wähle die passende Division.',
+      outro:'Richtig! m ÷ s = m/s – die Einheit der Geschwindigkeit.' }},
+  { title:'Kürzen', sub:'Was oben und unten steht, hebt sich auf',
+    pages:[
+      B => `<p>Steht derselbe Baustein oben <b>und</b> unten, heben sich beide auf – genau wie 3/3 = 1.</p>
+        <div class="demo"><div class="bricks lg"><div class="brow"><span class="brick">m</span><span class="brick">m</span><span class="brick x">m</span></div><div class="bbar"></div><div class="brow"><span class="brick x">m</span></div></div>
+        <span class="opbig">=</span>${B([2,0,0,0,0,0,0],true)}</div>
+        <p>m³ ÷ m = m². Ein Volumen geteilt durch eine Länge ergibt eine Fläche.</p>`,
+      B => `<p>Kürzt sich <b>alles</b> weg, bleibt nur die Zahl 1 übrig:</p>
+        <div class="demo"><div class="bricks lg"><div class="brow"><span class="brick x">m</span></div><div class="bbar"></div><div class="brow"><span class="brick x">m</span></div></div><span class="opbig">=</span><span style="font-size:1.8rem;font-weight:800">1</span></div>
+        <p>So eine Größe heißt <b>dimensionslos</b>. Beispiele: Winkel oder Wirkungsgrad.</p>`,
+    ],
+    task:{ target:'flaeche', given:['volumen','m'], solution:[['volumen','÷','m']],
+      howto:'Mach aus einem <b>Volumen (m³)</b> eine <b>Fläche</b>. Welche Rechnung kürzt einen Meter weg?',
+      outro:'Super! m³ ÷ m = m² – ein Meter oben und unten hat sich gekürzt.' }},
+  { title:'Hochzahlen & Kehrwert', sub:'x², x³ und 1/x',
+    pages:[
+      B => `<p>Mit <b>x²</b> nimmst du alle Bausteine doppelt, mit <b>x³</b> dreifach:</p>
+        <div class="demo"><span style="font-size:1.2rem">(m/s)²</span><span class="opbig">=</span>${B([2,0,-2,0,0,0,0],true)}</div>`,
+      B => `<p><b>1/x</b> (Kehrwert) dreht den Bruch um: Oben wird unten und unten wird oben.</p>
+        <div class="demo"><span style="font-size:1.2rem">1/s</span><span class="opbig">=</span>${B([0,0,-1,0,0,0,0],true)}</div>
+        <p>„Pro Sekunde“ – so oft passiert etwas in einer Sekunde. Das ist die <b>Frequenz</b>, gemessen in <b>Hertz (Hz)</b>.</p>`,
+    ],
+    task:{ target:'frequenz', given:['s'], solution:[['s','1/x']],
+      howto:'Tippe <b>s</b> auf der Arbeitsfläche an und bilde den <b>Kehrwert</b>.',
+      outro:'Perfekt: 1/s = Hz. Ein Herzschlag pro Sekunde wäre 1 Hz.' }},
+  { title:'Einheiten bekommen Namen', sub:'Newton – eine Abkürzung',
+    pages:[
+      B => `<p>Kraft = Masse × Beschleunigung. Mit Bausteinen:</p>
+        <div class="demo">${B([0,1,0,0,0,0,0],true)}<span class="opbig">×</span>${B([1,0,-2,0,0,0,0],true)}<span class="opbig">=</span>${B([1,1,-2,0,0,0,0],true)}</div>`,
+      B => `<p>„kg·m/s²“ ist ganz schön lang. Weil man es so oft braucht, hat es einen Namen bekommen: <b>Newton (N)</b>, nach Isaac Newton.</p>
+        <div class="callout"><span>💬</span><span>Ein Name ist nur eine <b>Abkürzung</b>. Die Bausteine darunter bleiben dieselben.</span></div>`,
+    ],
+    task:{ target:'kraft', given:['kg','beschl'], solution:[['kg','×','beschl']],
+      howto:'Baue <b>Kraft</b> aus Masse und Beschleunigung.',
+      outro:'Klasse! kg × m/s² = kg·m/s² = 1 Newton.' }},
+  { title:'Namen einsetzen', sub:'Vom Newton zum Joule',
+    pages:[
+      B => `<p>Arbeit = Kraft × Weg, also <b>N · m</b>. Um zu sehen, was drinsteckt, setzt du für N seine Bausteine ein:</p>
+        <div class="demo">${B([1,1,-2,0,0,0,0],true)}<span class="opbig">×</span>${B([1,0,0,0,0,0,0],true)}<span class="opbig">=</span>${B([2,1,-2,0,0,0,0],true)}</div>
+        <p>Das ist ein <b>Joule (J)</b> – die Einheit der Energie.</p>`,
+      B => `<p>So lässt sich jede Einheit Schritt für Schritt auf die 7 Grundbausteine zurückführen:</p>
+        <table><tr><td><b>W</b> (Watt)</td><td>= J / s</td></tr><tr><td><b>Pa</b> (Pascal)</td><td>= N / m²</td></tr><tr><td><b>V</b> (Volt)</td><td>= W / A</td></tr></table>`,
+    ],
+    task:{ target:'energie', given:['kraft','m'], solution:[['kraft','×','m']],
+      howto:'Baue <b>Energie</b> aus Kraft und Weg.',
+      outro:'Stark! N × m = kg·m²/s² = 1 Joule.' }},
+  { title:'Strom & Spannung', sub:'Der Baustein Ampere',
+    pages:[
+      B => `<p>Für Elektrizität kommt der Baustein <b>Ampere (A)</b> dazu. Er misst die Stromstärke.</p>
+        <p>Ladung = Stromstärke × Zeit:</p>
+        <div class="demo">${B([0,0,0,1,0,0,0],true)}<span class="opbig">×</span>${B([0,0,1,0,0,0,0],true)}<span class="opbig">=</span>${B([0,0,1,1,0,0,0],true)}<span class="opbig">=</span><b style="font-size:1.6rem">C</b></div>`,
+      B => `<p>Spannung = Leistung ÷ Stromstärke. In Bausteinen ist das schon ein ganzer Turm:</p>
+        <div class="demo">${B([2,1,-3,-1,0,0,0],true)}<span class="opbig">=</span><b style="font-size:1.6rem">V</b></div>`,
+    ],
+    task:{ target:'spannung', given:['leistung','A'], solution:[['leistung','÷','A']],
+      howto:'Baue <b>Spannung</b> aus Leistung und Stromstärke.',
+      outro:'Richtig! W ÷ A = Volt. Deine Steckdose liefert 230 davon.' }},
+  { title:'Gleiche Bausteine, andere Bedeutung', sub:'Joule oder Newtonmeter?',
+    pages:[
+      B => `<p>Energie (J) und Drehmoment (N·m) bestehen aus <b>genau denselben</b> Bausteinen:</p>
+        <div class="demo">${B([2,1,-2,0,0,0,0],true)}</div>
+        <p>Trotzdem sind es verschiedene Dinge: Energie wird verbraucht, ein Drehmoment dreht eine Schraube.</p>`,
+      B => `<div class="callout"><span>💬</span><span>Die Einheit verrät, <b>wie</b> eine Größe gebaut ist – aber nicht immer, <b>was</b> sie bedeutet.</span></div>
+        <p>🎉 Geschafft! Du kennst jetzt alle Bauregeln. Weiter geht's im <b>Abenteuer</b> – oder entdecke im <b>Labor</b> frei alle ${CATALOG.length} Einheiten.</p>`,
+    ]},
+];
+
+/* =========================================================================
+   2) KERNLOGIK  –  Vektor-Mathematik, Formatierung, Abgleich (ohne DOM)
+   ========================================================================= */
+const DIM = 7;
+const SYMBOLS = ['m','kg','s','A','K','mol','cd'];
+const DISPLAY_ORDER = [1,0,3,2,4,5,6];          // kg·m²/s³, A·s
+const MAX_EXP = 9;
+const ZERO = [0,0,0,0,0,0,0];
+const SUP = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+
+const norm   = v => v.map(x => x + 0);
+const vAdd   = (a,b) => norm(a.map((x,i) => x + b[i]));
+const vSub   = (a,b) => norm(a.map((x,i) => x - b[i]));
+const vScale = (a,k) => norm(a.map(x => x * k));
+const vEq    = (a,b) => a.every((x,i) => x === b[i]);
+const vKey   = v => norm(v).join(',');
+const isZero = v => v.every(x => x === 0);
+const keyVec = k => k.split(',').map(Number);
+const isBinary = op => op === '×' || op === '÷';
+
+/** × addiert Exponenten, ÷ subtrahiert, Potenz/Kehrwert multipliziert. */
+function applyOp(op, a, b){
+  switch(op){
+    case '×':   return vAdd(a,b);
+    case '÷':   return vSub(a,b);
+    case '²':   return vScale(a,2);
+    case '³':   return vScale(a,3);
+    case '1/x': return vScale(a,-1);
+  }
+  throw new Error('Unbekannte Operation ' + op);
+}
+
+/** Vektor → hübsche Einheit, z. B. "kg·m²/s³" (keine Roh-Exponenten). */
+function fmt(v){
+  if (isZero(v)) return '1';
+  const sup = e => e === 1 ? '' : String(e).split('').map(c => SUP[c]).join('');
+  const num = [], den = [];
+  for (const i of DISPLAY_ORDER){
+    const e = v[i];
+    if (e > 0) num.push(SYMBOLS[i] + sup(e));
+    else if (e < 0) den.push(SYMBOLS[i] + sup(-e));
+  }
+  let s = num.length ? num.join('·') : '1';
+  if (den.length) s += '/' + (den.length > 1 ? '(' + den.join('·') + ')' : den[0]);
+  return s;
+}
+
+/** Bausteine als Bruch: Zähler-Steine, Bruchstrich, Nenner-Steine. */
+function bricksHTML(v, large){
+  const row = sign => {
+    const out = [];
+    for (const i of DISPLAY_ORDER){
+      const e = v[i] * sign;
+      if (e <= 0) continue;
+      if (e > 5) out.push(`<span class="brick">${SYMBOLS[i]} ×${e}</span>`);
+      else for (let k = 0; k < e; k++) out.push(`<span class="brick">${SYMBOLS[i]}</span>`);
+    }
+    return out;
+  };
+  const top = row(1), bot = row(-1);
+  return `<div class="bricks${large ? ' lg' : ''}"><div class="brow">${top.length ? top.join('') : '<span class="brick one">1</span>'}</div>${
+    bot.length ? `<div class="bbar"></div><div class="brow">${bot.join('')}</div>` : ''}</div>`;
+}
+
+const BASE_BY_ID  = Object.fromEntries(BASE_UNITS.map(b => [b.id, b]));
+const BASE_BY_KEY = Object.fromEntries(BASE_UNITS.map(b => [vKey(b.vec), b]));
+const CAT_BY_ID   = Object.fromEntries(CATALOG.map(c => [c.id, c]));
+const BASE_KEYS   = new Set(Object.keys(BASE_BY_KEY));
+
+function refVec(ref){
+  if (Array.isArray(ref)) return ref;
+  if (ref === 'sr') return ZERO;
+  if (BASE_BY_ID[ref]) return BASE_BY_ID[ref].vec;
+  if (CAT_BY_ID[ref])  return CAT_BY_ID[ref].vec;
+  throw new Error('Unbekannte Referenz ' + ref);
+}
+function refName(ref){
+  if (Array.isArray(ref)) return 'eine Zwischengröße';
+  if (ref === 'sr') return 'Raumwinkel';
+  return (BASE_BY_ID[ref] || CAT_BY_ID[ref]).qty;
+}
+function refSymbol(ref){
+  if (Array.isArray(ref)) return fmt(ref);
+  if (ref === 'sr') return 'sr';
+  return (BASE_BY_ID[ref] || CAT_BY_ID[ref]).symbol;
+}
+function matchCatalog(vec, dimlessOperand){
+  return CATALOG.filter(e => vEq(e.vec, vec) && (!e.viaDimless || dimlessOperand));
+}
+/** Rechenweg-Zeilen, z. B. ["N ÷ m²", "kg·m/s² ÷ m²", "kg/(m·s²)"] */
+function routeSteps(op, aVec, bVec, aLab, bLab){
+  const wrap = s => /[·\/]/.test(s) ? '(' + s + ')' : s;
+  const expr = (x, y) => isBinary(op) ? `${x} ${op} ${y}` : op === '1/x' ? `1/${wrap(x)}` : `${wrap(x)}${op}`;
+  const res = applyOp(op, aVec, bVec);
+  const steps = [expr(aLab, bLab)];
+  const aF = fmt(aVec), bF = bVec ? fmt(bVec) : null;
+  if (aF !== aLab || (bVec && bF !== bLab)) steps.push(expr(aF, bF));
+  steps.push(fmt(res));
+  return steps;
+}
+/** Führt eine Lösung (Liste von Schritten) aus. Gibt Ergebnisvektoren zurück oder wirft. */
+function runSolution(given, solution){
+  const have = new Set(given.map(g => vKey(refVec(g))));
+  const results = [];
+  const get = r => {
+    const v = (typeof r === 'string' && r[0] === '#') ? results[+r.slice(1)] : refVec(r);
+    if (!v || !have.has(vKey(v))) throw new Error('Baustein nicht verfügbar: ' + r);
+    return v;
+  };
+  for (const [a, op, b] of solution){
+    const res = applyOp(op, get(a), b !== undefined ? get(b) : undefined);
+    results.push(res); have.add(vKey(res));
+  }
+  return results;
+}
+/** Abenteuer-Level flach mit Nummer und Par */
+const ADV_LEVELS = [];
+ADVENTURE.forEach(ch => ch.levels.forEach(l => ADV_LEVELS.push(Object.assign({ chapter: ch.chapter, no: ADV_LEVELS.length + 1, par: l.solution.length }, l))));
+
+/* =========================================================================
+   3) SELBSTTEST  –  Katalog, Rechenregeln, Level & Lektionen
+   ========================================================================= */
+function selfTest(){
+  const out = [];
+  const t = (name, ok) => out.push({ name, ok: !!ok });
+  const V = refVec;
+  const mul = (a,b) => applyOp('×', V(a), V(b));
+  const div = (a,b) => applyOp('÷', V(a), V(b));
+  t('N = kg·m/s²',  vEq(V('kraft'), mul('kg','beschl')));
+  t('J = N·m',      vEq(V('energie'), mul('kraft','m')));
+  t('W = J/s',      vEq(V('leistung'), div('energie','s')));
+  t('V = W/A',      vEq(V('spannung'), div('leistung','A')));
+  t('Ω = V/A',      vEq(V('widerstand'), div('spannung','A')));
+  t('S = 1/Ω',      vEq(V('leitwert'), applyOp('1/x', V('widerstand'))));
+  t('Pa = N/m²',    vEq(V('druck'), div('kraft','flaeche')));
+  t('Hz = 1/s',     vEq(V('frequenz'), applyOp('1/x', V('s'))));
+  t('C = A·s',      vEq(V('ladung'), mul('A','s')));
+  t('F = C/V',      vEq(V('kapazitaet'), div('ladung','spannung')));
+  t('Wb = V·s',     vEq(V('weber'), mul('spannung','s')));
+  t('T = Wb/m²',    vEq(V('tesla'), div('weber','flaeche')));
+  t('H = Wb/A',     vEq(V('induktivitaet'), div('weber','A')));
+  t('H = Ω·s',      vEq(V('induktivitaet'), mul('widerstand','s')));
+  t('lx = lm/m²',   vEq(V('lux'), div('lumen','flaeche')));
+  t('Drehmoment ≙ Energie', vEq(V('drehmoment'), V('energie')));
+
+  const ids = new Set();
+  for (const e of CATALOG){
+    t(`${e.id}: eindeutige ID`, !ids.has(e.id) && !BASE_BY_ID[e.id]); ids.add(e.id);
+    t(`${e.id}: Vektor 7 ganze Zahlen`, e.vec.length === DIM && e.vec.every(Number.isInteger));
+    t(`${e.id}: Pflichtfelder`, ['name','symbol','qty','formula','info','example'].every(k => typeof e[k] === 'string' && e[k]) && [1,2,3].includes(e.level));
+    const r = e.recipe;
+    t(`${e.id}: Rezept stimmt`, vEq(applyOp(r.op, refVec(r.a), r.b !== undefined ? refVec(r.b) : undefined), e.vec));
+    t(`${e.id}: Zutaten aus erreichbarer Stufe`, [r.a, r.b].filter(x => typeof x === 'string' && CAT_BY_ID[x]).every(x => CAT_BY_ID[x].level <= e.level));
+    t(`${e.id}: keine Basiseinheit`, e.viaDimless || !BASE_KEYS.has(vKey(e.vec)));
+  }
+  const all = [...BASE_UNITS, ...CATALOG].map(x => x.vec);
+  let comm = true, divInv = true;
+  for (const a of all) for (const b of all){
+    if (!vEq(applyOp('×',a,b), applyOp('×',b,a))) comm = false;
+    if (!vEq(applyOp('÷',a,b), applyOp('×',a,applyOp('1/x',b)))) divInv = false;
+  }
+  t('Kommutativität a×b = b×a (alle Paare)', comm);
+  t('a÷b = a×(1/b) (alle Paare)', divInv);
+  t('Format kg·m²/s³', fmt([2,1,-3,0,0,0,0]) === 'kg·m²/s³');
+  t('Format A·s', fmt(V('ladung')) === 'A·s');
+  t('Format 1/s', fmt([0,0,-1,0,0,0,0]) === '1/s');
+  t('Format ohne Minus/^', all.every(v => !/[-^]/.test(fmt(v))));
+
+  // Abenteuer: Musterlösung erreicht das Ziel, Ziel ist nicht schon gegeben
+  ADV_LEVELS.forEach(l => {
+    let ok = false;
+    try {
+      const r = runSolution(l.given, l.solution), last = r[r.length - 1], e = CAT_BY_ID[l.target];
+      ok = vEq(last, e.vec) && !l.given.some(g => vKey(refVec(g)) === vKey(e.vec) && !e.viaDimless);
+      if (e.viaDimless) ok = ok && l.solution[l.solution.length - 1].some(x => typeof x === 'string' && x[0] === '#' && isZero(r[+x.slice(1)]));
+      if (l.maxMoves) ok = ok && l.maxMoves >= l.par;
+    } catch(err) { ok = false; }
+    t(`Abenteuer ${l.no} (${l.target}) lösbar in ${l.par} Schritten`, ok);
+  });
+  // Lektionen: Übungen sind lösbar
+  LESSONS.forEach((L, i) => {
+    if (!L.task) return;
+    let ok = false;
+    try { const r = runSolution(L.task.given, L.task.solution); ok = vEq(r[r.length - 1], refVec(L.task.target)); } catch(e) {}
+    t(`Lektion ${i + 1}: Übung lösbar`, ok);
+  });
+  return out;
+}
+
+/* =========================================================================
+   4) SPIELSTAND
+   ========================================================================= */
+const STORE_KEY = 'einheiten-labor-v2';   // v3 nutzt denselben Speicher (abwärtskompatibel)
+const fmtTime = ms => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const DIMLESS_KEY = vKey(ZERO);
+function freshState(){
+  return { mode: null, sound: true,
+    labor: { discovered: [], tiles: BASE_UNITS.map(b => vKey(b.vec)), hints: 0, board: [] },
+    adv:   { stars: {}, times: {} },
+    learn: { done: [] } };
+}
+let state = freshState();
+function load(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw){
+      const s = JSON.parse(raw);
+      state = Object.assign(freshState(), s);
+      state.labor = Object.assign(freshState().labor, s.labor);
+      state.adv = Object.assign({ stars:{}, times:{} }, s.adv);
+      if (!Array.isArray(state.labor.board)) state.labor.board = [];
+      state.labor.board = state.labor.board.filter(p => p && typeof p.key === 'string' && p.key.split(',').length === DIM);
+      state.learn = Object.assign({ done:[] }, s.learn);
+    } else {
+      // Fortschritt aus Version 1 übernehmen
+      const old = JSON.parse(localStorage.getItem('einheiten-labor-v1') || 'null');
+      if (old && Array.isArray(old.tiles)){
+        state.labor.discovered = old.discovered || [];
+        state.labor.tiles = old.tiles; state.sound = old.sound !== false;
+      }
+    }
+    state.labor.discovered = state.labor.discovered.filter(id => CAT_BY_ID[id]);
+    for (const k of BASE_KEYS) if (!state.labor.tiles.includes(k)) state.labor.tiles.unshift(k);
+    state.labor.tiles = [...new Set(state.labor.tiles)];
+  } catch(e) { /* Speicher nicht verfügbar – Spiel läuft trotzdem */ }
+}
+function save(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {} }
+
+const isDiscovered = id => state.labor.discovered.includes(id);
+const countStage = l => CATALOG.filter(e => e.level === l && isDiscovered(e.id)).length;
+function unlockedStage(){
+  let lvl = 1;
+  for (let i = 1; i < STAGES.length; i++){ if (countStage(i) >= STAGES[i].unlockNeed) lvl = i + 1; else break; }
+  return lvl;
+}
+function starsFor(moves, par, hinted){
+  const s = moves <= par ? 3 : moves <= par + 2 ? 2 : 1;
+  return hinted ? Math.min(s, 2) : s;
+}
+const starStr = n => '★'.repeat(n) + '☆'.repeat(3 - n);
+
+/* =========================================================================
+   5) UI  (nur im Browser)
+   ========================================================================= */
+if (typeof document !== 'undefined') (function UI(){
+  const $ = s => document.querySelector(s);
+  const panel = $('#panel'), taskbar = $('#taskbar'), bench = $('#bench'), board = $('#board'), drawer = $('#drawer');
+  const resultEl = $('#result'), overlay = $('#overlay'), sheet = $('#sheet'), pop = $('#pop'), boardHint = $('#boardHint');
+  const TEST = selfTest(), FAILS = TEST.filter(x => !x.ok);
+  if (FAILS.length) console.warn('Selbsttest fehlgeschlagen:', FAILS);
+  else console.info(`Selbsttest: ${TEST.length}/${TEST.length} Prüfungen bestanden`);
+
+  load();
+  let mode = state.mode || (state.learn.done.length || state.labor.discovered.length ? 'labor' : 'learn');
+  let view = 'list';          // Abenteuer: list|play · Lernen: list|read|play
+  let task = null;            // aktive Aufgabe (Abenteuer/Lernen)
+  let lessonIdx = 0, pageIdx = 0;
+  let result = null;          // letzte Rechnung (Ergebniszeile)
+  let newKey = null, newPiece = null;
+  let selected = null;        // angetippter Baustein auf der Fläche (Piece-ID)
+  let popCtx = null;          // Kontext des offenen Menüs
+  let timerInt = null;
+  let pid = state.labor.board.reduce((m, p) => Math.max(m, p.id || 0), 0);
+
+  /* ---------- Icons & Sound ---------- */
+  const ICON = {
+    soundOn:  '<svg class="i" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 9a4 4 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11"/></svg>',
+    soundOff: '<svg class="i" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9.5l5 5M22 9.5l-5 5"/></svg>',
+    bulb:     '<svg class="i" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.8 10.6c.6.6.8 1.3.8 2.4h6c0-1.1.2-1.8.8-2.4A6 6 0 0 0 12 3z"/></svg>',
+    book:     '<svg class="i" viewBox="0 0 24 24"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H20v-3"/></svg>',
+    back:     '<svg class="i" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>',
+    retry:    '<svg class="i" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
+  };
+  let actx = null;
+  function tone(freqs, dur = .09, type = 'sine', gap = .07, vol = .08){
+    if (!state.sound) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const t0 = actx.currentTime;
+      freqs.forEach((f, i) => {
+        const o = actx.createOscillator(), g = actx.createGain(), st = t0 + i * gap;
+        o.type = type; o.frequency.value = f;
+        g.gain.setValueAtTime(.0001, st);
+        g.gain.exponentialRampToValueAtTime(vol, st + .01);
+        g.gain.exponentialRampToValueAtTime(.0001, st + dur);
+        o.connect(g).connect(actx.destination); o.start(st); o.stop(st + dur + .03);
+      });
+    } catch(e) {}
+  }
+  const sfx = {
+    tap:     () => tone([660], .05, 'sine', 0, .04),
+    combine: () => tone([440, 554], .08, 'triangle', .06, .06),
+    win:     () => tone([523, 659, 784, 1047], .18, 'triangle', .09, .09),
+    exists:  () => tone([392], .1, 'sine', 0, .05),
+    error:   () => tone([220, 180], .12, 'square', .08, .025),
+  };
+
+  /* ---------- Hilfen ---------- */
+  let toastT;
+  function toast(text){
+    const t = $('#toast'); t.textContent = text; t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+  function burstAt(el){
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const b = document.createElement('div'); b.className = 'burst';
+    b.style.left = (r.left + r.width / 2) + 'px'; b.style.top = (r.top + r.height / 2) + 'px';
+    for (let i = 0; i < 14; i++){
+      const a = i / 14 * Math.PI * 2, d = 45 + Math.random() * 45, p = document.createElement('i');
+      p.style.setProperty('--dx', Math.cos(a) * d + 'px'); p.style.setProperty('--dy', Math.sin(a) * d + 'px');
+      b.appendChild(p);
+    }
+    document.body.appendChild(b); setTimeout(() => b.remove(), 900);
+  }
+  const currentTiles = () => mode === 'labor' ? state.labor.tiles : task.tiles;
+  const boardPieces  = () => mode === 'labor' ? state.labor.board : (task ? task.board : []);
+  const pieceById    = id => boardPieces().find(p => p.id === id);
+  const pieceEl      = id => board.querySelector(`.piece[data-pid="${id}"]`);
+  const saveBoard    = () => { if (mode === 'labor') save(); };
+
+  /** Beschreibung eines Bausteins. Im Labor tragen nur entdeckte Einheiten Namen. */
+  function tileInfo(key){
+    const vec = keyVec(key), base = BASE_BY_KEY[key];
+    const named = CATALOG.filter(e => vKey(e.vec) === key && !e.viaDimless && (mode !== 'labor' || isDiscovered(e.id)));
+    if (base){
+      const extra = mode === 'labor' ? CATALOG.filter(e => e.viaDimless && vKey(e.vec) === key && isDiscovered(e.id)) : [];
+      return { key, vec, kind:'base', sym:base.symbol, name: base.name + (extra.length ? ' · auch ' + extra.map(e => e.symbol).join(', ') : ''), label:base.symbol, qtyName:base.qty };
+    }
+    if (key === DIMLESS_KEY) return { key, vec, kind:'dimless', sym:'1', name:'dimensionslos (sr)', label:'1', qtyName:'Raumwinkel (dimensionslos)', deletable:true };
+    if (named.length){
+      const syms = [...new Set(named.map(n => n.symbol))];
+      return { key, vec, kind:'named', sym:syms.join(' / '), name:named.map(n => n.qty).join(' / '), label:syms[0], qtyName:named[0].qty };
+    }
+    return { key, vec, kind:'inter', sym:fmt(vec), name:'', label:fmt(vec), qtyName:'Zwischengröße', deletable:true };
+  }
+
+  /* ======================================================================
+     RENDERING
+     ====================================================================== */
+  function render(){
+    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+    $('#btnSound').innerHTML = state.sound ? ICON.soundOn : ICON.soundOff;
+    const play = mode === 'labor' || view === 'play';
+    panel.classList.toggle('hidden', play);
+    [taskbar, bench, drawer].forEach(el => el.classList.toggle('hidden', !play));
+    if (!play){ closePop(); mode === 'adventure' ? renderAdventureList() : view === 'read' ? renderLessonPage() : renderLessonList(); return; }
+    renderTaskbar(); renderBoard(); renderDrawer(); renderResult();
+  }
+
+  // Wichtig: Im Ziel steht nur der Name der Größe – keine Einheit/Zusammensetzung.
+  function renderTaskbar(){
+    if (mode === 'labor'){
+      const n = state.labor.discovered.length, ul = unlockedStage(), nextStage = STAGES[ul];
+      const sub = nextStage ? `Stufe ${ul} · Stufe ${ul + 1} öffnet sich nach ${Math.max(0, nextStage.unlockNeed - countStage(ul))} weiteren Entdeckungen` : 'Alle Stufen freigeschaltet';
+      taskbar.innerHTML = `<div class="goal"><div class="t">Freies Labor</div><div class="s">${n} von ${CATALOG.length} Einheiten entdeckt · ${sub}</div>
+          <div class="meter"><i style="width:${n / CATALOG.length * 100}%"></i></div></div>
+        <button class="btn" data-act="tip">${ICON.bulb}Tipp</button>
+        <button class="btn" data-act="book">${ICON.book}Sammelbuch</button>`;
+      return;
+    }
+    const e = task.entry;
+    if (task.kind === 'adventure'){
+      const l = task.def, best = state.adv.times[l.no];
+      taskbar.innerHTML = `<button class="ghost" data-act="list" aria-label="Zur Übersicht">${ICON.back}</button>
+        <div class="goal"><div class="label">Level ${l.no} · ${l.chapter}</div>
+          <div class="t">Baue: ${e.qty}</div>
+          <div class="s">⏱ <span id="timer">${fmtTime((task.end || Date.now()) - task.start)}</span>${best ? ` (Bestzeit ${fmtTime(best)})` : ''}
+            · Schritte: ${task.moves}${l.maxMoves ? ' von max. ' + l.maxMoves : ''} · ★★★ bei ≤ ${l.par}</div></div>
+        <button class="btn" data-act="tip">${ICON.bulb}Tipp</button>
+        <button class="btn" data-act="retry" title="Neu starten" aria-label="Neu starten">${ICON.retry}</button>`;
+    } else {
+      taskbar.innerHTML = `<button class="ghost" data-act="read" aria-label="Zurück zur Lektion">${ICON.back}</button>
+        <div class="goal"><div class="label">Lektion ${lessonIdx + 1} · Übung</div>
+          <div class="t">Baue: ${e.qty}</div>
+          <div class="s">${task.def.howto}</div></div>`;
+    }
+  }
+  function tickTimer(){
+    const el = document.getElementById('timer');
+    if (el && task) el.textContent = fmtTime((task.end || Date.now()) - task.start);
+  }
+  function stopTimer(){ clearInterval(timerInt); timerInt = null; }
+
+  /* ---------- Arbeitsfläche ---------- */
+  function renderBoard(){
+    const ps = boardPieces();
+    board.querySelectorAll('.piece').forEach(n => n.remove());
+    boardHint.classList.toggle('hidden', ps.length > 0);
+    for (const p of ps){
+      const i = tileInfo(p.key), el = document.createElement('div');
+      el.className = `chip piece k-${i.kind}${p.id === selected ? ' sel' : ''}${p.id === newPiece ? ' pop' : ''}`;
+      el.dataset.pid = p.id; el.tabIndex = 0; el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', (i.name || 'Zwischenergebnis') + ' ' + i.sym);
+      el.innerHTML = `<span class="sym">${i.sym}</span>${i.name ? `<span class="nm">${i.name}</span>` : ''}`;
+      el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+      board.appendChild(el);
+    }
+    newPiece = null;
+    clampPieces();
+  }
+  /** Hält alle Bausteine innerhalb der Fläche (z. B. nach Drehen des Handys). */
+  function clampPieces(){
+    const W = board.clientWidth, H = board.clientHeight;
+    if (!W) return;
+    for (const p of boardPieces()){
+      const el = pieceEl(p.id); if (!el) continue;
+      p.x = Math.round(Math.max(4, Math.min(p.x, W - el.offsetWidth - 4)));
+      p.y = Math.round(Math.max(4, Math.min(p.y, H - el.offsetHeight - 4)));
+      el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+    }
+  }
+  /** Sucht einen freien Platz, damit neue Bausteine nichts verdecken. */
+  function freeSpot(near){
+    const W = board.clientWidth || 320, H = board.clientHeight || 280, w = 110, h = 46;
+    const rects = [...board.querySelectorAll('.piece')].map(e => ({ x:e.offsetLeft, y:e.offsetTop, w:e.offsetWidth, h:e.offsetHeight }));
+    const free = (x, y) => !rects.some(r => x < r.x + r.w + 8 && x + w > r.x - 8 && y < r.y + r.h + 8 && y + h > r.y - 8);
+    const spots = [];
+    for (let y = 12; y <= H - h; y += 26) for (let x = 12; x <= W - w; x += 26) if (free(x, y)) spots.push({ x, y });
+    if (!spots.length) return { x: 12 + Math.random() * Math.max(0, W - w - 24), y: 12 + Math.random() * Math.max(0, H - h - 24) };
+    if (!near) return spots[0];
+    return spots.reduce((b, s) => Math.hypot(s.x - near.x, s.y - near.y) < Math.hypot(b.x - near.x, b.y - near.y) ? s : b);
+  }
+  function addPiece(key, x, y, near){
+    const p = { id: ++pid, key, x, y };
+    if (x == null){ const s = freeSpot(near); p.x = s.x; p.y = s.y; }
+    boardPieces().push(p); newPiece = p.id;
+    return p;
+  }
+  function removePiece(id){ const ps = boardPieces(), i = ps.findIndex(p => p.id === id); if (i >= 0) ps.splice(i, 1); }
+  function markSel(ids){
+    const set = new Set(ids || (selected != null ? [selected] : []));
+    board.querySelectorAll('.piece').forEach(el => el.classList.toggle('sel', set.has(+el.dataset.pid)));
+  }
+
+  /* ---------- Bausteinkasten ---------- */
+  function chipHTML(i){
+    const cls = ['chip', 'k-' + i.kind];
+    if (i.key === newKey) cls.push('pop');
+    return `<div class="${cls.join(' ')}" data-key="${i.key}" role="button" tabindex="0" aria-label="${i.name || 'Zwischenergebnis'} ${i.sym}">
+      <span class="sym">${i.sym}</span>${i.name ? `<span class="nm">${i.name}</span>` : ''}${i.deletable ? '<button class="del" data-del aria-label="entfernen">×</button>' : ''}</div>`;
+  }
+  function renderDrawer(){
+    const infos = currentTiles().map(tileInfo);
+    const block = (title, arr, empty) => `<section><h3 class="label">${title}</h3>${arr.length
+      ? `<div class="chips">${arr.map(chipHTML).join('')}</div>` : `<div class="empty">${empty}</div>`}</section>`;
+    const help = `<div class="helpline">Antippen legt einen Baustein auf die Fläche. Oder zieh ihn an eine beliebige Stelle – oder direkt auf einen anderen Baustein. Bausteine von der Fläche ziehen entfernt sie.</div>`;
+    if (mode === 'labor'){
+      drawer.innerHTML =
+        block('Basiseinheiten', infos.filter(i => i.kind === 'base'), '') +
+        block('Entdeckt', infos.filter(i => i.kind === 'named'), 'Noch nichts entdeckt – probiere z. B. m ÷ s.') +
+        block('Zwischenergebnisse', infos.filter(i => i.kind === 'inter' || i.kind === 'dimless'), 'Kombinationen ohne Namen landen hier.') + help;
+    } else if (task.kind === 'adventure'){
+      drawer.innerHTML =
+        block('Startbausteine', infos.filter(i => task.given.has(i.key)), '') +
+        block('Alle deine entdeckten Einheiten', infos.filter(i => task.extra.has(i.key)), '') +
+        block('In diesem Level gebaut', infos.filter(i => !task.given.has(i.key) && !task.extra.has(i.key)), 'Noch nichts gebaut.') + help;
+    } else {
+      drawer.innerHTML = block('Deine Bausteine', infos, '') + help;
+    }
+    newKey = null;
+  }
+
+  function renderResult(){
+    if (!result){
+      resultEl.className = 'result';
+      resultEl.innerHTML = `<div class="rtext">${mode === 'labor'
+        ? 'Lege zwei Bausteine übereinander und wähle eine Rechnung. Gibt es die neue Einheit wirklich, hast du sie entdeckt!'
+        : 'Lege zwei Bausteine übereinander und wähle eine Rechnung.'}</div>`;
+      return;
+    }
+    resultEl.className = 'result' + (result.win ? ' win' : '');
+    resultEl.innerHTML = `${result.vec ? bricksHTML(result.vec) : ''}<div class="rtext">
+      ${result.eq ? `<div class="eq">${result.eq}</div>` : ''}${result.text || ''}</div>`;
+  }
+  function setResult(r){ result = r; renderResult(); }
+
+  /* ---------- Listen: Abenteuer & Lernen ---------- */
+  function advUnlocked(no){ return no === 1 || (state.adv.stars[no - 1] || 0) > 0; }
+  function renderAdventureList(){
+    const total = Object.values(state.adv.stars).reduce((a, b) => a + b, 0);
+    let html = `<h1 class="page">Abenteuer</h1>
+      <p class="lead">In jedem Level sollst du eine bestimmte Größe bauen – möglichst schnell und mit wenigen Schritten. Dir stehen dabei alle Einheiten zur Verfügung, die du schon entdeckt hast. <b>${total} / ${ADV_LEVELS.length * 3} ★</b></p>`;
+    for (const ch of ADVENTURE){
+      html += `<h3 class="label chapter">${ch.chapter}</h3><div class="list">`;
+      for (const l of ADV_LEVELS.filter(x => x.chapter === ch.chapter)){
+        const e = CAT_BY_ID[l.target], st = state.adv.stars[l.no] || 0, open = advUnlocked(l.no), tm = state.adv.times[l.no];
+        html += `<button class="row ${st ? 'done' : ''}" data-level="${l.no}" ${open ? '' : 'disabled'}>
+          <span class="num">${l.no}</span>
+          <span class="main"><span class="t">${open ? e.qty : 'Gesperrt'}</span>
+            <span class="s" style="display:block">${open ? 'Start: ' + l.given.map(refSymbol).join(', ') + (l.maxMoves ? ` · max. ${l.maxMoves} Schritte` : '') : 'Schaffe zuerst das vorige Level'}</span></span>
+          <span class="stars">${open ? starStr(st) : ''}${tm ? `<span class="s" style="display:block;text-align:right;color:var(--muted);letter-spacing:0;font-size:.78rem">⏱ ${fmtTime(tm)}</span>` : ''}</span></button>`;
+      }
+      html += `</div>`;
+    }
+    panel.innerHTML = html;
+  }
+  function renderLessonList(){
+    const done = state.learn.done.length;
+    panel.innerHTML = `<h1 class="page">Lernen</h1>
+      <p class="lead">Ohne Vorwissen: Hier lernst du Schritt für Schritt, wie physikalische Einheiten aus wenigen Grundbausteinen zusammengesetzt sind. ${done}/${LESSONS.length} Lektionen erledigt.</p>
+      <div class="list">${LESSONS.map((L, i) => `<button class="row ${state.learn.done.includes(i) ? 'done' : ''}" data-lesson="${i}">
+        <span class="num">${state.learn.done.includes(i) ? '✓' : i + 1}</span>
+        <span class="main"><span class="t">${L.title}</span><span class="s" style="display:block">${L.sub}${L.task ? ' · mit Übung' : ''}</span></span>
+        <span class="s" style="color:var(--faint)">›</span></button>`).join('')}</div>`;
+  }
+  function renderLessonPage(){
+    const L = LESSONS[lessonIdx], last = pageIdx === L.pages.length - 1;
+    panel.innerHTML = `<button class="ghost" data-act="learn-list">${ICON.back}Alle Lektionen</button>
+      <div class="label" style="margin-top:14px">Lektion ${lessonIdx + 1} von ${LESSONS.length}</div>
+      <h1 class="page">${L.title}</h1><p class="lead">${L.sub}</p>
+      <div class="lesson">${L.pages[pageIdx](bricksHTML)}</div>
+      <div class="dots">${L.pages.map((_, i) => `<i class="${i === pageIdx ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="navrow">
+        <button class="btn" data-act="page-prev" ${pageIdx === 0 ? 'disabled' : ''}>Zurück</button>
+        <button class="btn primary" data-act="page-next">${last ? (L.task ? 'Übung starten' : 'Lektion abschließen') : 'Weiter'}</button>
+      </div>`;
+  }
+
+  /* ======================================================================
+     MODI & AUFGABEN
+     ====================================================================== */
+  function leavePlay(){ stopTimer(); closePop(); selected = null; }
+  function setMode(m){
+    leavePlay();
+    mode = m; state.mode = m; save();
+    view = 'list'; task = null; result = null;
+    window.scrollTo(0, 0); render();
+  }
+  function startTask(kind, def){
+    leavePlay();
+    const entry = CAT_BY_ID[def.target], tKey = vKey(entry.vec);
+    const givenKeys = [...new Set(def.given.map(g => vKey(refVec(g))))];
+    let extra = [];
+    if (kind === 'adventure'){
+      // Alle Basiseinheiten + alle im Labor entdeckten Einheiten – außer dem Ziel selbst
+      const cand = [...BASE_UNITS.map(b => vKey(b.vec)), ...state.labor.discovered.map(id => vKey(CAT_BY_ID[id].vec))];
+      extra = [...new Set(cand)].filter(k => !givenKeys.includes(k) && (entry.viaDimless || k !== tKey));
+    }
+    task = { kind, def, entry, given: new Set(givenKeys), extra: new Set(extra), tiles: [...givenKeys, ...extra], board: [],
+             moves: 0, hintStep: 0, hinted: false, done: false, start: Date.now(), end: null };
+    view = 'play'; result = null;
+    window.scrollTo(0, 0); render();
+    givenKeys.forEach(k => { addPiece(k); renderBoard(); });   // Startbausteine liegen schon bereit
+    if (kind === 'adventure') timerInt = setInterval(tickTimer, 500);
+  }
+  const startLevel = no => startTask('adventure', ADV_LEVELS[no - 1]);
+  function openLesson(i){ leavePlay(); lessonIdx = i; pageIdx = 0; view = 'read'; task = null; window.scrollTo(0, 0); render(); }
+  function finishLesson(i){ if (!state.learn.done.includes(i)) state.learn.done.push(i); save(); }
+
+  /* ======================================================================
+     MENÜS AUF DER FLÄCHE
+     ====================================================================== */
+  function openPop(anchor, html, ctx){
+    popCtx = ctx;
+    pop.innerHTML = html; pop.classList.add('open');
+    const r = anchor.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight;
+    let x = r.left + r.width / 2 - pw / 2, y = r.bottom + 8;
+    if (y + ph > innerHeight - 8) y = r.top - ph - 8;
+    pop.style.left = Math.max(8, Math.min(x, innerWidth - pw - 8)) + 'px';
+    pop.style.top = Math.max(8, y) + 'px';
+    pop.querySelector('button')?.focus({ preventScroll: true });
+  }
+  function closePop(){ pop.classList.remove('open'); popCtx = null; markSel(); }
+  function openBinary(a, b){
+    const pa = pieceById(a), pb = pieceById(b); if (!pa || !pb) return;
+    selected = null;
+    const A = tileInfo(pa.key).label, B = tileInfo(pb.key).label;
+    openPop(pieceEl(b), `<div class="pt">Wie sollen die beiden verrechnet werden?</div><div class="pb">
+      <button class="pri" data-pop="×">${A} × ${B}</button><button data-pop="÷">${A} ÷ ${B}</button>
+      <button data-pop="÷r">${B} ÷ ${A}</button><button class="quiet" data-pop="cancel">Abbrechen</button></div>`, { a, b });
+    markSel([a, b]);
+  }
+  function openUnary(id){
+    const p = pieceById(id); if (!p) return;
+    const i = tileInfo(p.key);
+    openPop(pieceEl(id), `<div class="pt"><b>${i.sym}</b> – Rechnung wählen oder einen zweiten Baustein antippen.</div><div class="pb">
+      <button class="pri" data-pop="²">x²</button><button class="pri" data-pop="³">x³</button><button class="pri" data-pop="1/x">1/x</button>
+      <button data-pop="dup">Kopie</button><button class="quiet" data-pop="del">Entfernen</button></div>`, { a: id });
+  }
+  pop.addEventListener('click', ev => {
+    const b = ev.target.closest('[data-pop]'); if (!b || !popCtx) return;
+    const v = b.dataset.pop, c = popCtx;
+    closePop(); selected = null;
+    if (v === 'cancel'){ markSel(); return; }
+    if (v === '×' || v === '÷') return combine(v, c.a, c.b, c.b);
+    if (v === '÷r') return combine('÷', c.b, c.a, c.b);
+    if (v === 'dup'){ const p = pieceById(c.a); addPiece(p.key, null, null, p); saveBoard(); renderBoard(); return; }
+    if (v === 'del'){ removePiece(c.a); saveBoard(); renderBoard(); return; }
+    combine(v, c.a, null, c.a);
+  });
+  function tapChip(key){
+    if (selected != null && pieceById(selected)){
+      const s = pieceById(selected), np = addPiece(key, null, null, s);
+      renderBoard(); openBinary(s.id, np.id);
+    } else { addPiece(key); saveBoard(); renderBoard(); sfx.tap(); }
+  }
+  function tapPiece(id){
+    if (selected != null && selected !== id && pieceById(selected)){ const a = selected; selected = null; openBinary(a, id); return; }
+    if (selected === id){ selected = null; closePop(); return; }
+    selected = id; markSel(); sfx.tap(); openUnary(id);
+  }
+
+  /* ======================================================================
+     RECHNEN
+     ====================================================================== */
+  function combine(op, aId, bId, atId){
+    if (task && task.done) return;
+    const pa = pieceById(aId), pb = bId != null ? pieceById(bId) : null;
+    if (!pa) return;
+    const A = tileInfo(pa.key), B = pb ? tileInfo(pb.key) : null;
+    const res = applyOp(op, A.vec, B ? B.vec : undefined);
+    if (res.some(e => Math.abs(e) > MAX_EXP)){ sfx.error(); setResult({ text:'Das wird zu exotisch – so hohe Hochzahlen kommen in der Praxis nicht vor.' }); return; }
+    const steps = routeSteps(op, A.vec, B && B.vec, A.label, B && B.label);
+    const ctx = { op, A, B, res, key: vKey(res), steps, eq: steps.join(' = '),
+                  dimlessOperand: isZero(A.vec) || (B && isZero(B.vec)) };
+    ctx.existed = currentTiles().includes(ctx.key);
+    if (!ctx.existed){ currentTiles().push(ctx.key); newKey = ctx.key; }
+    // Die beiden Bausteine verschmelzen zum Ergebnis – an der Stelle des Ziels
+    const at = pieceById(atId) || pa, pos = { x: at.x, y: at.y };
+    removePiece(aId); if (pb) removePiece(bId);
+    ctx.piece = addPiece(ctx.key, pos.x, pos.y);
+    mode === 'labor' ? laborResult(ctx) : taskResult(ctx);
+  }
+
+  /* ---------- Labor: Entdecken ---------- */
+  function laborResult(c){
+    const ul = unlockedStage();
+    if (isZero(c.res)){
+      save(); render(); sfx.combine();
+      setResult({ vec: c.res, eq: c.eq, text: '<b>Dimensionslos!</b> Alle Bausteine haben sich weggekürzt. Der Baustein „1“ steht für den Raumwinkel (sr) – probier ihn mit einer Licht-Einheit.' });
+      return;
+    }
+    const matches = matchCatalog(c.res, c.dimlessOperand);
+    const fresh = matches.filter(e => e.level <= ul && !isDiscovered(e.id));
+    const locked = matches.filter(e => e.level > ul && !isDiscovered(e.id));
+    if (fresh.length){
+      fresh.forEach(e => state.labor.discovered.push(e.id));
+      save(); render();
+      sfx.win(); burstAt(pieceEl(c.piece.id));
+      setResult({ vec: c.res, eq: c.eq + ' = ' + fresh[0].symbol, win: true, text: `Neu entdeckt: <b>${fresh.map(e => e.qty).join(' und ')}</b>` });
+      setTimeout(() => openCards(fresh, c, 'Neue Einheit entdeckt!'), 350);
+      const ul2 = unlockedStage();
+      if (ul2 > ul) setTimeout(() => { toast(`${STAGES[ul2 - 1].title} freigeschaltet`); tone([392,523,659,784],.2,'sine',.08,.07); }, 1100);
+      return;
+    }
+    save(); render();
+    if (locked.length){ sfx.exists(); setResult({ vec: c.res, eq: c.eq, text: `Das sieht nach einer Einheit aus <b>Stufe ${locked[0].level}</b> aus. Schalte die Stufe frei und baue sie dann noch einmal.` }); }
+    else if (c.existed){ sfx.exists(); flashChip(c.key); const i = tileInfo(c.key);
+      setResult({ vec: c.res, eq: c.eq, text: 'Diesen Baustein hast du schon' + (i.kind === 'named' || i.kind === 'base' ? `: <b>${i.name}</b>.` : '.') }); }
+    else { sfx.combine(); setResult({ vec: c.res, eq: c.eq, text: 'Keine benannte Einheit – aber ein neuer Zwischenbaustein zum Weiterbauen.' }); }
+  }
+
+  /* ---------- Abenteuer & Lernen: Ziel erreicht? ---------- */
+  function taskResult(c){
+    task.moves++;
+    const e = task.entry;
+    const success = vEq(c.res, e.vec) && (!e.viaDimless || c.dimlessOperand);
+    if (success){ task.done = true; task.end = Date.now(); stopTimer(); }
+    render();
+    if (success){
+      sfx.win(); burstAt(pieceEl(c.piece.id));
+      setResult({ vec: c.res, eq: c.eq + ' = ' + e.symbol, win: true, text: `<b>Geschafft!</b> Das ist ${e.qty}.` });
+      // Zählt auch als Entdeckung im Labor
+      if (!isDiscovered(e.id)){ state.labor.discovered.push(e.id); if (!state.labor.tiles.includes(c.key)) state.labor.tiles.push(c.key); }
+      if (task.kind === 'adventure'){
+        const no = task.def.no, st = starsFor(task.moves, task.def.par, task.hinted), time = task.end - task.start;
+        const oldBest = state.adv.times[no];
+        state.adv.stars[no] = Math.max(state.adv.stars[no] || 0, st);
+        if (!oldBest || time < oldBest) state.adv.times[no] = time;
+        save();
+        setTimeout(() => openAdventureWin(c, st, time, oldBest), 500);
+      } else {
+        finishLesson(lessonIdx); save();
+        setTimeout(() => openLessonWin(c), 500);
+      }
+      return;
+    }
+    const named = tileInfo(c.key);
+    const text = isZero(c.res) ? '<b>Dimensionslos</b> – alles hat sich weggekürzt.'
+      : c.existed ? 'Diesen Baustein hattest du schon.'
+      : named.kind === 'named' ? `Das ist <b>${named.name}</b> – nicht das Ziel, aber vielleicht ein guter Zwischenschritt.`
+      : 'Neuer Zwischenbaustein. Weiter so!';
+    sfx.combine();
+    setResult({ vec: c.res, eq: c.eq, text });
+    if (task.kind === 'adventure' && task.def.maxMoves && task.moves >= task.def.maxMoves){
+      task.done = true; task.end = Date.now(); stopTimer(); sfx.error();
+      setTimeout(() => openSheet(`<div class="celebrate"><div class="bigstars">☆☆☆</div><h2>Keine Schritte mehr</h2>
+        <p class="lead" style="margin:4px 0 0">Du hattest ${task.def.maxMoves} Schritte. Versuch es noch einmal – der Tipp hilft dir beim Start.</p></div>
+        <div class="btnrow"><button class="btn primary" data-act="retry">Nochmal</button><button class="btn" data-act="list">Zur Übersicht</button></div>`), 500);
+    }
+  }
+  function flashChip(key){
+    const el = drawer.querySelector(`.chip[data-key="${key}"]`);
+    if (!el) return;
+    el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+  }
+
+  /* ---------- Tipps ---------- */
+  function laborTip(){
+    const ul = unlockedStage();
+    const open = CATALOG.filter(e => e.level <= ul && !isDiscovered(e.id));
+    if (!open.length){ setResult({ text: ul < STAGES.length ? 'Alles in deinen Stufen entdeckt!' : 'Du hast alle Einheiten entdeckt – großartig!' }); return; }
+    const has = ref => state.labor.tiles.includes(vKey(refVec(ref)));
+    const ready = open.filter(e => has(e.recipe.a) && (e.recipe.b === undefined || has(e.recipe.b)));
+    const half = open.filter(e => has(e.recipe.a));
+    const pool = ready.length ? ready : half.length ? half : open;
+    const minL = Math.min(...pool.map(e => e.level));
+    const cands = pool.filter(e => e.level === minL);
+    const e = cands[state.labor.hints++ % cands.length]; save();
+    const r = e.recipe;
+    let text = isBinary(r.op) ? `<b>${e.qty}</b> = ${refName(r.a)} ${r.op} ?`
+      : `<b>${e.qty}</b>: Probier es mit <b>${refName(r.a)}</b> allein – welche Rechnung (x², x³, 1/x) passt?`;
+    if (!ready.includes(e)) text += '<br>Der zweite Baustein fehlt dir noch – baue ihn zuerst.';
+    sfx.tap(); setResult({ text: 'Tipp: ' + text });
+  }
+  function adventureTip(){
+    if (task.done) return;
+    const sol = task.def.solution, i = Math.min(task.hintStep, sol.length - 1);
+    const name = r => (typeof r === 'string' && r[0] === '#') ? `dem Ergebnis aus Schritt ${+r.slice(1) + 1}` : `<b>${refSymbol(r)}</b>`;
+    const [a, op, b] = sol[i];
+    const text = isBinary(op) ? `Schritt ${i + 1}: Rechne ${name(a)} ${op} ${name(b)}.`
+      : `Schritt ${i + 1}: Tippe ${name(a)} an und wähle <b>${op === '1/x' ? '1/x' : 'x' + op}</b>.`;
+    task.hintStep++; task.hinted = true; sfx.tap();
+    setResult({ text: (task.kind === 'adventure' ? 'Tipp (max. ★★): ' : 'Tipp: ') + text + (i < sol.length - 1 ? ' Drück nochmal Tipp für den nächsten Schritt.' : '') });
+  }
+
+  /* ======================================================================
+     KARTEN & DIALOGE
+     ====================================================================== */
+  function cardHTML(e, words, steps){
+    const same = CATALOG.filter(o => o.id !== e.id && vEq(o.vec, e.vec));
+    const s = [...steps];
+    if (s[s.length - 1] !== e.symbol) s.push(e.symbol + ' (' + e.name + ')');
+    return `<div class="card">
+      <div class="head"><div class="big">${e.symbol}</div>
+        <div><div class="title">${e.qty}</div><div class="sub">${e.name} · <span class="badge">Stufe ${e.level}</span></div></div>
+        <div style="margin-left:auto">${bricksHTML(e.vec)}</div></div>
+      <h4 class="label">Rechenweg</h4>
+      <ul class="steps"><li class="words">${words}</li>${s.map((x, i) => `<li>${i ? '<span class="eq">=</span>' : ''}${x}</li>`).join('')}</ul>
+      <h4 class="label">Formel</h4><div class="formula">${e.formula}</div>
+      <h4 class="label">Was bedeutet das?</h4><div>${e.info}</div>
+      <h4 class="label">Im Alltag</h4><div>${e.example}</div>
+      ${e.note ? `<div class="callout" style="margin-top:14px"><span>⚠︎</span><span>${e.note}</span></div>` : ''}
+      ${same.length ? `<div class="callout" style="margin-top:8px"><span>↔︎</span><span>Gleiche Dimension wie: ${same.map(o => isDiscovered(o.id) ? `<b>${o.qty} (${o.symbol})</b>` : '<i>eine noch unentdeckte Größe</i>').join(', ')}</span></div>` : ''}
+    </div>`;
+  }
+  function wordsFor(op, aName, bName, target){
+    if (isBinary(op)) return `${target} = ${aName} ${op} ${bName}`;
+    if (op === '1/x') return `${target} = 1 / ${aName}`;
+    return `${target} = ${aName}${op}`;
+  }
+  function openCards(entries, c, headline){
+    const body = entries.map(e => cardHTML(e, wordsFor(c.op, c.A.qtyName, c.B && c.B.qtyName, e.qty), c.steps)).join('');
+    openSheet(`<div class="celebrate"><h2>${headline}</h2></div>${body}
+      <div class="btnrow"><button class="btn primary" data-close>Weiter forschen</button></div>`);
+  }
+  function openBookEntry(id){
+    const e = CAT_BY_ID[id], r = e.recipe, hasB = r.b !== undefined;
+    const steps = routeSteps(r.op, refVec(r.a), hasB ? refVec(r.b) : undefined, refSymbol(r.a), hasB ? refSymbol(r.b) : null);
+    openSheet(cardHTML(e, wordsFor(r.op, refName(r.a), hasB ? refName(r.b) : '', e.qty), steps), e.qty);
+  }
+  function openAdventureWin(c, st, time, oldBest){
+    const no = task.def.no, e = task.entry, hasNext = no < ADV_LEVELS.length;
+    const timeTxt = !oldBest ? `Zeit ${fmtTime(time)}` : time < oldBest ? `Neue Bestzeit: ${fmtTime(time)} (vorher ${fmtTime(oldBest)})` : `Zeit ${fmtTime(time)} · Bestzeit ${fmtTime(oldBest)}`;
+    openSheet(`<div class="celebrate"><div class="bigstars">${starStr(st)}</div><h2>Level ${no} geschafft!</h2>
+        <p class="lead" style="margin:2px 0 0">⏱ ${timeTxt}<br>${task.moves} Schritt${task.moves === 1 ? '' : 'e'} · ★★★ bei ≤ ${task.def.par}${task.hinted ? ' · mit Tipp' : ''}</p></div>
+      ${cardHTML(e, wordsFor(c.op, c.A.qtyName, c.B && c.B.qtyName, e.qty), c.steps)}
+      <div class="btnrow">${hasNext ? '<button class="btn primary" data-act="next-level">Nächstes Level</button>' : ''}
+        <button class="btn" data-act="retry">Nochmal</button><button class="btn" data-act="list">Übersicht</button></div>`);
+  }
+  function openLessonWin(c){
+    const L = LESSONS[lessonIdx], next = lessonIdx + 1 < LESSONS.length;
+    openSheet(`<div class="celebrate"><h2>Richtig!</h2></div>
+      <div class="lesson"><div class="demo">${bricksHTML(c.res, true)}<span class="opbig">=</span><b style="font-size:1.8rem">${task.entry.symbol}</b></div>
+      <p>${L.task.outro}</p></div>
+      <div class="btnrow">${next ? '<button class="btn primary" data-act="next-lesson">Nächste Lektion</button>' : '<button class="btn primary" data-act="goto-adventure">Zum Abenteuer</button>'}
+        <button class="btn" data-act="learn-list">Alle Lektionen</button></div>`);
+  }
+  function openBook(){
+    const ul = unlockedStage(), n = state.labor.discovered.length;
+    let html = `<div><b>${n}/${CATALOG.length}</b> entdeckt</div><div class="meter"><i style="width:${n / CATALOG.length * 100}%"></i></div>`;
+    for (const S of STAGES){
+      const lock = S.level > ul, entries = CATALOG.filter(e => e.level === S.level);
+      html += `<div class="${lock ? 'locked' : ''}"><h4 class="label chapter" style="margin-top:20px">${S.title} · ${countStage(S.level)}/${entries.length}${lock ? ' · gesperrt' : ''}</h4>
+        <div class="bookgrid">${entries.map(e => isDiscovered(e.id)
+          ? `<button class="bentry" data-entry="${e.id}"><div class="s">${e.symbol}</div><div class="n">${e.qty}</div></button>`
+          : `<div class="bentry unknown"><div class="s">???</div><div class="n">${lock ? 'gesperrt' : 'unentdeckt'}</div></div>`).join('')}</div></div>`;
+    }
+    html += `<div class="foot">Selbsttest: ${TEST.length - FAILS.length}/${TEST.length} Prüfungen bestanden${FAILS.length ? ' – Fehler: ' + FAILS.map(f => f.name).join(', ') : ' ✓'}</div>`;
+    openSheet(html, 'Sammelbuch');
+  }
+
+  let lastFocus = null;
+  function openSheet(inner, title){
+    closePop();
+    lastFocus = document.activeElement;
+    sheet.innerHTML = (title ? `<div class="sheet-head"><h2>${title}</h2><button class="ghost" data-close aria-label="Schließen">✕</button></div>` : '') + inner;
+    overlay.classList.add('open'); sheet.scrollTop = 0;
+    const f = sheet.querySelector('.btn.primary, [data-close]'); if (f) f.focus({ preventScroll:true });
+  }
+  function closeSheet(){ overlay.classList.remove('open'); lastFocus?.focus?.({ preventScroll:true }); }
+
+  /* ======================================================================
+     EREIGNISSE
+     ====================================================================== */
+  function act(a){
+    switch(a){
+      case 'tip':   return mode === 'labor' ? laborTip() : adventureTip();
+      case 'book':  return openBook();
+      case 'clear': boardPieces().splice(0); selected = null; closePop(); saveBoard(); return renderBoard();
+      case 'retry': closeSheet(); return startTask(task.kind, task.def);
+      case 'list':  closeSheet(); leavePlay(); task = null; view = 'list'; window.scrollTo(0, 0); return render();
+      case 'next-level': closeSheet(); return startLevel(task.def.no + 1);
+      case 'read':  leavePlay(); view = 'read'; pageIdx = LESSONS[lessonIdx].pages.length - 1; task = null; return render();
+      case 'learn-list': closeSheet(); leavePlay(); task = null; view = 'list'; window.scrollTo(0, 0); return render();
+      case 'next-lesson': closeSheet(); return openLesson(lessonIdx + 1);
+      case 'goto-adventure': closeSheet(); return setMode('adventure');
+      case 'page-prev': pageIdx = Math.max(0, pageIdx - 1); window.scrollTo(0, 0); return render();
+      case 'page-next': {
+        const L = LESSONS[lessonIdx];
+        if (pageIdx < L.pages.length - 1){ pageIdx++; window.scrollTo(0, 0); return render(); }
+        if (L.task) return startTask('learn', L.task);
+        finishLesson(lessonIdx); sfx.win();
+        if (lessonIdx + 1 < LESSONS.length) return openLesson(lessonIdx + 1);
+        view = 'list'; return render();
+      }
+    }
+  }
+  document.addEventListener('click', ev => {
+    if (ev.target.closest('#pop')) return;
+    const a = ev.target.closest('[data-act]'); if (a && !a.disabled){ act(a.dataset.act); return; }
+    const lv = ev.target.closest('[data-level]'); if (lv && !lv.disabled){ startLevel(+lv.dataset.level); return; }
+    const ls = ev.target.closest('[data-lesson]'); if (ls){ openLesson(+ls.dataset.lesson); return; }
+    const en = ev.target.closest('[data-entry]'); if (en){ openBookEntry(en.dataset.entry); return; }
+    if (ev.target === overlay || ev.target.closest('[data-close]')) closeSheet();
+  });
+  document.addEventListener('keydown', ev => {
+    if (ev.key !== 'Escape') return;
+    if (pop.classList.contains('open')){ selected = null; closePop(); }
+    else if (overlay.classList.contains('open')) closeSheet();
+  });
+  document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  $('#btnSound').addEventListener('click', () => { state.sound = !state.sound; save(); $('#btnSound').innerHTML = state.sound ? ICON.soundOn : ICON.soundOff; sfx.tap(); });
+  $('#btnReset').addEventListener('click', () => {
+    if (!confirm('Wirklich alles zurücksetzen? Labor, Abenteuer-Sterne, Zeiten und Lektionen gehen verloren.')) return;
+    const snd = state.sound; state = freshState(); state.sound = snd; save();
+    setMode('learn'); toast('Alles zurückgesetzt');
+  });
+  window.addEventListener('resize', () => { closePop(); if (!bench.classList.contains('hidden')) clampPieces(); });
+  window.addEventListener('scroll', () => { if (pop.classList.contains('open') && !drag) { selected = null; closePop(); } }, { passive: true });
+
+  /* ---------- Ziehen (Pointer Events) ----------
+     • Bausteine aus dem Kasten: Maus sofort, Touch nach kurzem Halten (≈ 0,2 s),
+       damit die Seite scrollbar bleibt. Ablegen an beliebiger Stelle der Fläche
+       oder direkt auf einem anderen Baustein (→ Rechnung wählen).
+     • Bausteine auf der Fläche: sofort verschiebbar; auf einen anderen ziehen
+       verrechnet, aus der Fläche hinausziehen entfernt.
+     • Kurzes Antippen: Kasten → auf die Fläche legen; Fläche → Menü / Paar bilden. */
+  let drag = null;
+  const under = (x, y) => document.elementFromPoint(x, y);
+  function targetPiece(x, y){ const el = under(x, y), p = el && el.closest('.piece'); return p && p !== drag.el ? p : null; }
+  const overBoard = (x, y) => { const el = under(x, y); return !!(el && el.closest('#board')); };
+
+  document.addEventListener('pointerdown', ev => {
+    if (ev.button > 0) return;
+    const inPop = ev.target.closest('#pop'), piece = ev.target.closest('.piece'), chip = ev.target.closest('#drawer .chip');
+    if (!inPop && !piece && !chip && pop.classList.contains('open')){ selected = null; closePop(); }
+    if (inPop || ev.target.closest('[data-del]') || (!piece && !chip)) return;
+    if (task && task.done && piece) return;
+    const el = piece || chip;
+    drag = { src: piece ? 'piece' : 'chip', el, id: ev.pointerId, x0: ev.clientX, y0: ev.clientY,
+             pid: piece ? +piece.dataset.pid : null, key: piece ? (pieceById(+piece.dataset.pid) || {}).key : chip.dataset.key,
+             touch: ev.pointerType === 'touch', armed: !!piece || ev.pointerType !== 'touch', started: false };
+    if (drag.touch && !piece) drag.timer = setTimeout(() => {
+      if (drag && !drag.started){ drag.armed = true; el.classList.add('armed'); navigator.vibrate?.(10); }
+    }, 200);
+  });
+  window.addEventListener('pointermove', ev => {
+    if (!drag || ev.pointerId !== drag.id) return;
+    const d = Math.hypot(ev.clientX - drag.x0, ev.clientY - drag.y0);
+    if (!drag.started){
+      if (!drag.armed){ if (d > 10) endDrag(); return; }
+      if (d < 5) return;
+      drag.started = true; closePop(); selected = null; markSel();
+      const r = drag.el.getBoundingClientRect();
+      drag.dx = ev.clientX - r.left; drag.dy = ev.clientY - r.top;
+      if (drag.src === 'chip'){
+        drag.ghost = drag.el.cloneNode(true);
+        drag.ghost.className = drag.el.className.replace(/\b(armed|pop|flash)\b/g, '') + ' dragghost';
+        drag.ghost.querySelector('.del')?.remove();
+        document.body.appendChild(drag.ghost);
+        drag.el.classList.add('dragging');
+      } else drag.el.classList.add('moving');
+    }
+    if (drag.src === 'chip') drag.ghost.style.transform = `translate(${ev.clientX - drag.dx}px, ${ev.clientY - drag.dy}px)`;
+    else { const br = board.getBoundingClientRect(); drag.el.style.left = (ev.clientX - br.left - drag.dx) + 'px'; drag.el.style.top = (ev.clientY - br.top - drag.dy) + 'px'; }
+    board.querySelectorAll('.piece.target').forEach(p => p.classList.remove('target'));
+    const t = targetPiece(ev.clientX, ev.clientY);
+    if (t) t.classList.add('target');
+    board.classList.toggle('over', !t && overBoard(ev.clientX, ev.clientY));
+  });
+  window.addEventListener('pointerup', ev => {
+    if (!drag || ev.pointerId !== drag.id) return;
+    const x = ev.clientX, y = ev.clientY, d = Math.hypot(x - drag.x0, y - drag.y0);
+    const { src, key, pid: id, started } = drag;
+    if (!started){ endDrag(); if (d < 10) src === 'chip' ? tapChip(key) : tapPiece(id); return; }
+    const t = targetPiece(x, y), onBoard = overBoard(x, y), br = board.getBoundingClientRect();
+    const pos = { x: x - br.left - drag.dx, y: y - br.top - drag.dy };
+    endDrag();
+    if (src === 'chip'){
+      if (t){ const np = addPiece(key, pos.x, pos.y); renderBoard(); openBinary(np.id, +t.dataset.pid); }
+      else if (onBoard){ addPiece(key, pos.x, pos.y); saveBoard(); renderBoard(); sfx.tap(); }
+    } else {
+      const p = pieceById(id); if (!p) return renderBoard();
+      if (t){ p.x = pos.x; p.y = pos.y; renderBoard(); openBinary(id, +t.dataset.pid); }
+      else if (onBoard){ p.x = pos.x; p.y = pos.y; saveBoard(); renderBoard(); }
+      else { removePiece(id); saveBoard(); renderBoard(); toast('Baustein von der Fläche entfernt'); }
+    }
+  });
+  window.addEventListener('pointercancel', () => { if (drag && drag.src === 'piece') renderBoard(); endDrag(); });
+  document.addEventListener('touchmove', ev => { if (drag && drag.touch && drag.armed) ev.preventDefault(); }, { passive:false });
+  document.addEventListener('contextmenu', ev => { if (ev.target.closest('.chip')) ev.preventDefault(); });
+  function endDrag(){
+    if (!drag) return;
+    clearTimeout(drag.timer);
+    drag.el.classList.remove('armed', 'dragging', 'moving');
+    drag.ghost?.remove();
+    board.querySelectorAll('.piece.target').forEach(p => p.classList.remove('target'));
+    board.classList.remove('over');
+    drag = null;
+  }
+  // Tastatur: Enter/Leertaste
+  document.addEventListener('keydown', ev => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    const piece = ev.target.closest && ev.target.closest('.piece'), chip = ev.target.closest && ev.target.closest('#drawer .chip');
+    if (piece){ ev.preventDefault(); tapPiece(+piece.dataset.pid); }
+    else if (chip && !ev.target.closest('[data-del]')){ ev.preventDefault(); tapChip(chip.dataset.key); }
+  });
+  // Zwischenergebnis aus dem Kasten löschen
+  drawer.addEventListener('click', ev => {
+    const del = ev.target.closest('[data-del]'); if (!del) return;
+    ev.stopPropagation();
+    const key = del.closest('.chip').dataset.key, tiles = currentTiles();
+    tiles.splice(tiles.indexOf(key), 1);
+    const ps = boardPieces();
+    for (let i = ps.length - 1; i >= 0; i--) if (ps[i].key === key) ps.splice(i, 1);
+    save(); render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
